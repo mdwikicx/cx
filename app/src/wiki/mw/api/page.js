@@ -2,7 +2,6 @@ import Page from "../models/page";
 import LanguageTitleGroup from "../models/languageTitleGroup";
 import segmentedContentConverter from "../../../utils/segmentedContentConverter";
 import { siteMapper, getUserCoordinates } from "../../../utils/mediawikiHelper";
-
 /**
  * Default size for thumbnail images in pixels
  * @type {number}
@@ -140,30 +139,6 @@ const fetchPageContent = (
     );
 };
 
-async function fix_it(text) {
-
-    const options = {
-        // headers: { "Content-Type": "application/json" },
-        // mode: 'no-cors',
-        method: 'POST',
-        dataType: 'json',
-        // dispatcher: new Agent({ connect: { timeout: 60_000 } }),
-        body: JSON.stringify({ html: text })
-    };
-    const url = 'http://localhost:8000/textp';
-    // const url = 'https://ncc2c.toolforge.org/textp';
-    const response = await fetch(url, options);
-    if (!response.ok) {
-        console.error(response.statusText);
-        return text;
-    }
-    const data = await response.json();
-
-    const result = data.result;
-
-    return result;
-}
-
 /**
  * Fetches segmented content of a page for given source language,
  * target language and source title.
@@ -190,18 +165,26 @@ const fetchSegmentedContent = (
         $title: title,
     };
 
+    var cxServerApiURL = "https://medwiki.toolforge.org/get_html.php?title=" + title
+
     let relativeApiURL = "/page/$sourcelanguage/$targetlanguage/$title";
 
     // If revision is requested, load that revision of page.
     if (revision) {
         cxServerParams.$revision = revision;
         relativeApiURL += "/$revision";
+
+        cxServerApiURL = "https://medwiki.toolforge.org/get_html.php?revision=" + cxServerParams.$revision
     }
 
     // Example: https://cxserver.wikimedia.org/v2/page/en/es/Vlasovite
-    const cxServerApiURL = siteMapper.getCXServerUrl(relativeApiURL, cxServerParams);
+    // const cxServerApiURL = siteMapper.getCXServerUrl( relativeApiURL, cxServerParams );
 
-    const result = fetch(cxServerApiURL)
+    const options = {
+        method: 'GET',
+        dataType: 'json'
+    }
+    const result = fetch(cxServerApiURL, options)
         .then((response) => response.json())
         .then((response) => response.segmentedContent);
 
