@@ -2,7 +2,6 @@ import Page from "../models/page";
 import LanguageTitleGroup from "../models/languageTitleGroup";
 import segmentedContentConverter from "../../../utils/segmentedContentConverter";
 import { siteMapper, getUserCoordinates } from "../../../utils/mediawikiHelper";
-
 /**
  * Default size for thumbnail images in pixels
  * @type {number}
@@ -149,6 +148,7 @@ const fetchPageContent = (
  * @param {string|null} revision
  * @return {Promise<String>}
  */
+
 const fetchSegmentedContent = (
     sourceLanguage,
     targetLanguage,
@@ -158,11 +158,56 @@ const fetchSegmentedContent = (
     const title = sourceTitle.replace(/ /g, "_")
     const sourceWikiCode = siteMapper.getWikiDomainCode(sourceLanguage);
     const targetWikiCode = siteMapper.getWikiDomainCode(targetLanguage);
+
+    const cxServerParams = {
+        sourcelanguage: sourceWikiCode,
+        targetlanguage: targetWikiCode,
+    };
+
+    var cxServerApiURL = "https://medwiki.toolforge.org/get_html.php";
+
+    // If revision is requested, load that revision of page.
+    if (revision) {
+        cxServerParams.revision = revision;
+    } else {
+        cxServerParams.title = title;
+    }
+    const options = {
+        method: 'GET',
+        dataType: 'json'
+    }
+
+    cxServerApiURL = cxServerApiURL + "?" + $.param(cxServerParams)
+
+    const result = fetch(cxServerApiURL, options)
+        .then((response) => response.json())
+        .then((response) => response.segmentedContent);
+
+    return result;
+};
+
+/**
+ * Fetches segmented content of a page for given source language,
+ * target language and source title.
+ * @param {string} sourceLanguage
+ * @param {string} targetLanguage
+ * @param {string} sourceTitle
+ * @param {string|null} revision
+ * @return {Promise<String>}
+ */
+const fetchSegmentedContent_old = (
+    sourceLanguage,
+    targetLanguage,
+    sourceTitle,
+    revision = null
+) => {
+    const sourceWikiCode = siteMapper.getWikiDomainCode(sourceLanguage);
+    const targetWikiCode = siteMapper.getWikiDomainCode(targetLanguage);
     const cxServerParams = {
         $sourcelanguage: sourceWikiCode,
         $targetlanguage: targetWikiCode,
         // Manual normalisation to avoid redirects on spaces but not to break namespaces
-        $title: title,
+        $title: sourceTitle.replace(/ /g, "_"),
     };
 
     let relativeApiURL = "/page/$sourcelanguage/$targetlanguage/$title";
@@ -174,13 +219,14 @@ const fetchSegmentedContent = (
     }
 
     // Example: https://cxserver.wikimedia.org/v2/page/en/es/Vlasovite
-    const cxServerApiURL = siteMapper.getCXServerUrl(relativeApiURL, cxServerParams);
+    const cxServerApiURL = siteMapper.getCXServerUrl(
+        relativeApiURL,
+        cxServerParams
+    );
 
-    const result = fetch(cxServerApiURL)
+    return fetch(cxServerApiURL)
         .then((response) => response.json())
         .then((response) => response.segmentedContent);
-
-    return result;
 };
 
 /**
