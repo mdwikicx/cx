@@ -189,9 +189,7 @@ mw.cx.SiteMapper.prototype.getLanguagePairs = function () {
 			.then( ( response ) => response.json() )
 			.then( ( response ) => ( {
 				targetLanguages: response.target,
-				// sourceLanguages: response.source
-				// list with "mdwiki" only
-				sourceLanguages: [ 'en' ]
+				sourceLanguages: response.source
 			} ) )
 			.catch( ( response ) => {
 				mw.log(

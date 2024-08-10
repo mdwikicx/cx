@@ -14,4 +14,3 @@ node_modules/
 tests/selenium/log
 **/i18n/*.json
 **/i18n/api/*.json
-modules/mw.cx.UserPermissionChecker.js
