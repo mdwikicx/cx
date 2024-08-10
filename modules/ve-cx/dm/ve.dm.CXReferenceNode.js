@@ -9,7 +9,7 @@
  * @class
  * @constructor
  * @extends ve.dm.MWReferenceNode
- * @mixins ve.dm.CXLintableNode
+ * @mixes ve.dm.CXLintableNode
  */
 ve.dm.CXReferenceNode = function VeDmCXReferenceNode() {
 	// Parent constructor
@@ -36,12 +36,12 @@ OO.mixinClass( ve.dm.CXReferenceNode, ve.dm.CXLintableNode );
  * @inheritdoc
  */
 ve.dm.CXReferenceNode.static.toDataElement = function ( domElements ) {
-	var cxDataJSON = domElements[ 0 ].getAttribute( 'data-cx' );
+	const cxDataJSON = domElements[ 0 ].getAttribute( 'data-cx' );
 
 	// Parent method
-	var dataElement = ve.dm.CXReferenceNode.super.static.toDataElement.apply( this, arguments );
+	const dataElement = ve.dm.CXReferenceNode.super.static.toDataElement.apply( this, arguments );
 
-	var cxData;
+	let cxData;
 	try {
 		cxData = cxDataJSON ? JSON.parse( cxDataJSON ) : {};
 	} catch ( e ) {
@@ -57,7 +57,7 @@ ve.dm.CXReferenceNode.static.toDataElement = function ( domElements ) {
  * @inheritdoc
  */
 ve.dm.CXReferenceNode.static.toDomElements = function ( dataElement ) {
-	var elements = ve.dm.CXReferenceNode.super.static.toDomElements.apply( this, arguments ),
+	const elements = ve.dm.CXReferenceNode.super.static.toDomElements.apply( this, arguments ),
 		cxData = OO.getProp( dataElement, 'attributes', 'cx' );
 
 	if ( cxData ) {
@@ -70,9 +70,7 @@ ve.dm.CXReferenceNode.static.toDomElements = function ( dataElement ) {
 /* Methods */
 
 ve.dm.CXReferenceNode.prototype.onAttach = function () {
-	var sectionNode, title, message, cxData;
-
-	sectionNode = this.findParent( ve.dm.CXSectionNode );
+	const sectionNode = this.findParent( ve.dm.CXSectionNode );
 	// When section content is replaced, this happens:
 	// 1) attach is called with VeDmSectionNode and we cannot access VeDmCXSectionNode
 	// 2) detach is called with VeDmCXSectionNode and we unregister our warning
@@ -85,7 +83,8 @@ ve.dm.CXReferenceNode.prototype.onAttach = function () {
 		return;
 	}
 
-	cxData = this.getAdaptationInfo();
+	const cxData = this.getAdaptationInfo();
+	let title, message;
 	if ( cxData.partial === true ) {
 		title = mw.msg( 'cx-tools-linter-incomplete-reference' );
 		message = mw.message( 'cx-tools-linter-incomplete-reference-message' );
@@ -126,19 +125,18 @@ ve.dm.CXReferenceNode.prototype.onDetach = function ( parent ) {
  * @return {Object} The adaptation info
  */
 ve.dm.CXReferenceNode.prototype.getAdaptationInfo = function () {
-	var nodeGroup, kinNodes, contentsUsed,
-		cxData = {};
+	let cxData = {};
 
-	contentsUsed = this.getAttribute( 'contentsUsed' );
+	const contentsUsed = this.getAttribute( 'contentsUsed' );
 	// If contentsUsed is false, then this reference is a reused reference.
 	// The adaptation status needs to be extracted from original reference.
 	if ( contentsUsed ) {
 		cxData = this.getAttribute( 'cx' ) || {};
 	} else {
-		nodeGroup = this.doc.getInternalList().getNodeGroup(
+		const nodeGroup = this.doc.getInternalList().getNodeGroup(
 			this.getAttribute( 'listGroup' )
 		);
-		kinNodes = nodeGroup && nodeGroup.keyedNodes[ this.getAttribute( 'listKey' ) ];
+		const kinNodes = nodeGroup && nodeGroup.keyedNodes[ this.getAttribute( 'listKey' ) ];
 		// See if there is any kin nodes and if so, use the first one.
 		if ( kinNodes && kinNodes.length > 0 ) {
 			cxData = kinNodes[ 0 ].getAttribute( 'cx' ) || {};

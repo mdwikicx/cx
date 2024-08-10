@@ -22,13 +22,12 @@
 		sourceTitle,
 		targetTitle
 	) {
-		var title, params, targetWikiId, api;
-		var namespaceIds = mw.config.get( 'wgNamespaceIds' );
+		const namespaceIds = mw.config.get( 'wgNamespaceIds' );
 		// Do not link source pages in the user namespace
-		var sourceMwTitle = new mw.Title( sourceTitle );
+		const sourceMwTitle = new mw.Title( sourceTitle );
 
 		// Link only pages in the main space
-		title = new mw.Title( targetTitle );
+		const title = new mw.Title( targetTitle );
 		if (
 			title.getNamespaceId() !== 0 ||
 			sourceMwTitle.getNamespaceId() === namespaceIds.user
@@ -37,15 +36,18 @@
 		}
 
 		// Current wiki is target wiki since publishing happens at target wiki
-		targetWikiId = mw.config.get( 'wgWikiID' );
-		params = {
+		const targetWikiId = mw.config.get( 'wgWikiID' );
+		const sourceWikiDomainCode = mw.cx.siteMapper.getWikiDomainCode( sourceLanguage );
+		const targetWikiDomainCode = mw.cx.siteMapper.getWikiDomainCode( targetLanguage );
+
+		let params = {
 			action: 'wblinktitles',
-			fromsite: targetWikiId.replace( targetLanguage, sourceLanguage ),
+			fromsite: targetWikiId.replace( targetWikiDomainCode, sourceWikiDomainCode ),
 			fromtitle: sourceTitle,
 			tosite: targetWikiId,
 			totitle: targetTitle
 		};
-		api = new mw.ForeignApi( 'https://www.wikidata.org/w/api.php' );
+		const api = new mw.ForeignApi( 'https://www.wikidata.org/w/api.php' );
 		return Promise.resolve( api.postWithToken( 'csrf', params )
 			.then( function ( response ) {
 				const revisionId = response.entity.sitelinks.lastrevid;

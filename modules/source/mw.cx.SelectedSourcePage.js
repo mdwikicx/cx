@@ -18,7 +18,7 @@
  * @class
  * @param {mw.cx.SiteMapper} siteMapper
  * @param {Object} config
- * @cfg {Function} [onDiscard] Callback triggered after selected source page is discarded
+ * @param {Function} [config.onDiscard] Callback triggered after selected source page is discarded
  */
 mw.cx.SelectedSourcePage = function ( siteMapper, config ) {
 	this.siteMapper = siteMapper;
@@ -72,9 +72,6 @@ mw.cx.SelectedSourcePage.prototype.init = function () {
 };
 
 mw.cx.SelectedSourcePage.prototype.render = function () {
-	var $linkContainer, $container, $info, $metrics, $license, $actions,
-		translateButtonLabel, languageCountIcon;
-
 	this.$image = $( '<div>' )
 		.addClass( 'cx-selected-source-page__image' );
 
@@ -84,10 +81,10 @@ mw.cx.SelectedSourcePage.prototype.render = function () {
 			lang: this.languageFilter.getSourceLanguage(),
 			dir: $.uls.data.getDir( this.languageFilter.getSourceLanguage() )
 		} );
-	$linkContainer = $( '<span>' )
+	const $linkContainer = $( '<span>' )
 		.append( this.$link );
 
-	languageCountIcon = new OO.ui.IconWidget( {
+	const languageCountIcon = new OO.ui.IconWidget( {
 		icon: 'language',
 		classes: [ 'cx-selected-source-page__language-count' ]
 	} );
@@ -95,15 +92,15 @@ mw.cx.SelectedSourcePage.prototype.render = function () {
 	this.viewsCount = new OO.ui.LabelWidget( {
 		classes: [ 'cx-selected-source-page__views-count' ]
 	} );
-	$metrics = $( '<div>' )
+	const $metrics = $( '<div>' )
 		.addClass( 'cx-selected-source-page__metrics' )
 		.append( languageCountIcon.$element, this.languageCount.$element, this.viewsCount.$element );
 
-	$info = $( '<div>' )
+	const $info = $( '<div>' )
 		.addClass( 'cx-selected-source-page__info' )
 		.append( $linkContainer, $metrics );
 
-	$container = $( '<div>' )
+	const $container = $( '<div>' )
 		.addClass( 'cx-selected-source-page__container' )
 		.append(
 			this.$image,
@@ -122,19 +119,19 @@ mw.cx.SelectedSourcePage.prototype.render = function () {
 		.append( this.$messageText )
 		.hide();
 
-	translateButtonLabel = mw.msg( 'cx-selected-source-page-start-translation-button' );
+	const translateButtonLabel = mw.msg( 'cx-selected-source-page-start-translation-button' );
 	this.startTranslationButton = new OO.ui.ButtonWidget( {
 		flags: [ 'primary', 'progressive' ],
 		label: translateButtonLabel
 	} );
 
-	$license = $( '<div>' )
+	const $license = $( '<div>' )
 		.addClass( 'cx-selected-source-page__license' )
 		.append( mw.message( 'cx-license-agreement', translateButtonLabel ).parseDom() );
 
 	$license.find( 'a' ).prop( 'target', '_blank' );
 
-	$actions = $( '<div>' )
+	const $actions = $( '<div>' )
 		.addClass( 'cx-selected-source-page__actions' )
 		.append( this.startTranslationButton.$element );
 
@@ -197,9 +194,9 @@ mw.cx.SelectedSourcePage.prototype.toggleOutlineIcon = function () {
 };
 
 mw.cx.SelectedSourcePage.prototype.onBookmarkButtonClick = function () {
-	var params, api = new mw.Api();
+	const api = new mw.Api();
 
-	params = {
+	const params = {
 		assert: 'user',
 		action: 'cxsuggestionlist',
 		listname: 'cx-suggestionlist-favorite',
@@ -234,7 +231,7 @@ mw.cx.SelectedSourcePage.prototype.onBookmarkButtonClick = function () {
  * @return {string} Messsage to notify user after keeping an article for later.
  */
 mw.cx.SelectedSourcePage.prototype.getNotifyMessage = function () {
-	var selectedOptionWidget = $( '.cx-translation-filter .oo-ui-optionWidget-selected' ).data(),
+	const selectedOptionWidget = $( '.cx-translation-filter .oo-ui-optionWidget-selected' ).data(),
 		selectedView = selectedOptionWidget && selectedOptionWidget.ooUiOptionWidget;
 
 	return selectedView && selectedView.getData() === 'suggestions' ?
@@ -276,10 +273,10 @@ mw.cx.SelectedSourcePage.prototype.discardDialog = function () {
  * @param {string} language Language code
  */
 mw.cx.SelectedSourcePage.prototype.changeSelectedSourceTitle = function ( language ) {
-	var href, title = this.sourcePageTitles[ language ];
+	const title = this.sourcePageTitles[ language ];
 
 	if ( title ) {
-		href = this.siteMapper.getPageUrl( language, title );
+		const href = this.siteMapper.getPageUrl( language, title );
 		this.$link.prop( {
 			href: href,
 			title: title,
@@ -330,19 +327,18 @@ mw.cx.SelectedSourcePage.prototype.setTargetTitle = function ( targetTitle ) {
  * @param {string} pageTitle
  * @param {string} href
  * @param {Object} config
- * @cfg {string} sourceLanguage Source language code
- * @cfg {string} targetLanguage Target language code
- * @cfg {Object} [params] Parameters used for API call to get page info
- * @cfg {string} [imageUrl] URL for selected source page image
- * @cfg {string} [imageIcon] OOUI class of selected page placeholder icon
- * @cfg {number} [numOfLanguages] Number of different language versions for selected source page
+ * @param {string} config.sourceLanguage Source language code
+ * @param {string} config.targetLanguage Target language code
+ * @param {Object} [config.params] Parameters used for API call to get page info
+ * @param {string} [config.imageUrl] URL for selected source page image
+ * @param {string} [config.imageIcon] OOUI class of selected page placeholder icon
+ * @param {number} [config.numOfLanguages] Number of different language versions for selected source page
  */
 mw.cx.SelectedSourcePage.prototype.setData = function ( pageTitle, href, config ) {
-	var params;
 	this.languageFilter.setSourceLanguageNoChecks( config.sourceLanguage );
 	this.languageFilter.setTargetLanguageNoChecks( config.targetLanguage );
 
-	params = $.extend( {
+	const params = $.extend( {
 		prop: [ 'langlinks', 'pageviews' ],
 		redirects: true,
 		lllimit: 'max'
@@ -366,11 +362,9 @@ mw.cx.SelectedSourcePage.prototype.setData = function ( pageTitle, href, config 
 	this.$link.toggleClass( 'cx-selected-source-page__link--long', pageTitle.length >= 60 );
 
 	this.getPageInfo( pageTitle, params ).done( function ( data ) {
-		var langCode, title, languagesPageExistsIn, languageDecorator, numOfLanguages;
-
 		this.renderPageViews( data.pageviews );
 
-		numOfLanguages =
+		const numOfLanguages =
 			config.numOfLanguages ||
 			( OO.getProp( data, 'langlinkscount' ) || 0 ) + 1;
 		this.languageCount.setLabel( mw.language.convertNumber( numOfLanguages ) );
@@ -380,8 +374,8 @@ mw.cx.SelectedSourcePage.prototype.setData = function ( pageTitle, href, config 
 		// Extract results data and create sourcePageTitles mapping
 		if ( data.langlinks ) {
 			data.langlinks.forEach( function ( element ) {
-				langCode = element.lang;
-				title = element[ '*' ];
+				const langCode = element.lang;
+				const title = element[ '*' ];
 
 				this.sourcePageTitles[ langCode ] = title;
 			}, this );
@@ -389,8 +383,8 @@ mw.cx.SelectedSourcePage.prototype.setData = function ( pageTitle, href, config 
 		// Include chosen source page title (not returned by langlinks API)
 		this.sourcePageTitles[ this.languageFilter.getSourceLanguage() ] = pageTitle;
 
-		languagesPageExistsIn = Object.keys( this.sourcePageTitles );
-		languageDecorator = function ( $language, languageCode ) {
+		const languagesPageExistsIn = Object.keys( this.sourcePageTitles );
+		const languageDecorator = function ( $language, languageCode ) {
 			if ( languagesPageExistsIn.indexOf( languageCode ) < 0 ) {
 				$language.css( 'font-weight', 'bold' );
 			}
@@ -424,13 +418,11 @@ mw.cx.SelectedSourcePage.prototype.setData = function ( pageTitle, href, config 
  * @return {jQuery.Promise} Returns thenable promise, so langlinks can be processed if necessary.
  */
 mw.cx.SelectedSourcePage.prototype.getPageInfo = function ( title, params ) {
-	var api;
-
 	if ( !title ) {
 		throw new Error( 'Title is mandatory parameter' );
 	}
 
-	api = this.siteMapper.getApi( this.languageFilter.getSourceLanguage() );
+	const api = this.siteMapper.getApi( this.languageFilter.getSourceLanguage() );
 	params = $.extend( {
 		action: 'query',
 		// If new prop array is provided in params, this one is overridden
@@ -440,15 +432,14 @@ mw.cx.SelectedSourcePage.prototype.getPageInfo = function ( title, params ) {
 	}, params );
 
 	return api.get( params ).then( function ( data ) {
-		var pageId,
-			page = OO.getProp( data, 'query', 'pages' );
+		const page = OO.getProp( data, 'query', 'pages' );
 
 		if ( !page ) {
 			return $.Deferred().reject( 'No page data' ).promise();
 		}
 
 		// Only one title was passed in titles params, so we expect one result
-		pageId = Object.keys( page )[ 0 ];
+		const pageId = Object.keys( page )[ 0 ];
 		if ( pageId === '-1' ) {
 			// Page does not exist
 			return $.Deferred().reject( 'Requested page does not exist' ).promise();
@@ -466,13 +457,13 @@ mw.cx.SelectedSourcePage.prototype.getPageInfo = function ( title, params ) {
 };
 
 mw.cx.SelectedSourcePage.prototype.renderPageViews = function ( pageViewData ) {
-	var date, pageViews = 0;
+	let pageViews = 0;
 
 	if ( !pageViewData ) {
 		return;
 	}
 
-	for ( date in pageViewData ) {
+	for ( const date in pageViewData ) {
 		pageViews += pageViewData[ date ];
 	}
 
@@ -502,10 +493,9 @@ mw.cx.SelectedSourcePage.prototype.initBookmark = function () {
 };
 
 mw.cx.SelectedSourcePage.prototype.isAlreadyFavorite = function ( sourceLanguage, targetLanguage, title ) {
-	var params,
-		api = new mw.Api();
+	const api = new mw.Api();
 
-	params = {
+	const params = {
 		assert: 'user',
 		formatversion: 2,
 		action: 'cxsuggestionlist',
@@ -525,13 +515,11 @@ mw.cx.SelectedSourcePage.prototype.isAlreadyFavorite = function ( sourceLanguage
  * Start a new page translation in Special:CX.
  */
 mw.cx.SelectedSourcePage.prototype.startPageInCX = function () {
-	var targetTitle, originalSourceTitle, sourceLanguage, targetLanguage, siteMapper;
-
-	siteMapper = this.siteMapper;
-	sourceLanguage = this.languageFilter.getSourceLanguage();
-	targetLanguage = this.languageFilter.getTargetLanguage();
-	originalSourceTitle = this.sourceTitle;
-	targetTitle = this.targetTitle;
+	const siteMapper = this.siteMapper;
+	const sourceLanguage = this.languageFilter.getSourceLanguage();
+	const targetLanguage = this.languageFilter.getTargetLanguage();
+	const originalSourceTitle = this.sourceTitle;
+	const targetTitle = this.targetTitle;
 
 	this.validator.isTitleExistInLanguage(
 		sourceLanguage,
@@ -554,17 +542,16 @@ mw.cx.SelectedSourcePage.prototype.startPageInCX = function () {
  * Checks selected source page for problems with chosen source and target language pair.
  */
 mw.cx.SelectedSourcePage.prototype.check = function () {
-	var sourceLanguage = this.languageFilter.getSourceLanguage(),
+	const sourceLanguage = this.languageFilter.getSourceLanguage(),
 		targetLanguage = this.languageFilter.getTargetLanguage(),
-		targetTitle = this.targetTitle || '',
-		titleCheck, translationCheck;
+		targetTitle = this.targetTitle || '';
 
 	this.$messageBar.hide();
 
 	// Whether the target title, if given, exists in the target wiki
-	titleCheck = this.validator.isTitleExistInLanguage( targetLanguage, targetTitle );
+	const titleCheck = this.validator.isTitleExistInLanguage( targetLanguage, targetTitle );
 	// Whether the source already has a translation linked via language links
-	translationCheck = this.validator.isTitleConnectedInLanguages(
+	const translationCheck = this.validator.isTitleConnectedInLanguages(
 		sourceLanguage,
 		targetLanguage,
 		this.sourceTitle
@@ -611,15 +598,12 @@ mw.cx.SelectedSourcePage.prototype.showPageExistsAndTitleInUseError = function (
 	existingTargetTitle,
 	targetLanguage
 ) {
-	var equivalentTargetPageLink, targetLanguageDisplay,
-		existingTargetTitleLink, message;
+	const equivalentTargetPageLink = this.siteMapper.getPageUrl( targetLanguage, equivalentTargetPage );
+	const targetLanguageDisplay = $.uls.data.getAutonym( targetLanguage );
 
-	equivalentTargetPageLink = this.siteMapper.getPageUrl( targetLanguage, equivalentTargetPage );
-	targetLanguageDisplay = $.uls.data.getAutonym( targetLanguage );
+	const existingTargetTitleLink = this.siteMapper.getPageUrl( targetLanguage, existingTargetTitle );
 
-	existingTargetTitleLink = this.siteMapper.getPageUrl( targetLanguage, existingTargetTitle );
-
-	message = mw.message(
+	const message = mw.message(
 		'cx-selected-source-page-error-page-and-title-exist',
 		equivalentTargetPageLink,
 		targetLanguageDisplay,
@@ -636,12 +620,10 @@ mw.cx.SelectedSourcePage.prototype.showPageExistsAndTitleInUseError = function (
  * @param {string} targetLanguage
  */
 mw.cx.SelectedSourcePage.prototype.showPageExistsError = function ( equivalentTargetPage, targetLanguage ) {
-	var equivalentTargetPageLink, targetLanguageDisplay, message;
+	const equivalentTargetPageLink = this.siteMapper.getPageUrl( targetLanguage, equivalentTargetPage );
+	const targetLanguageDisplay = $.uls.data.getAutonym( targetLanguage );
 
-	equivalentTargetPageLink = this.siteMapper.getPageUrl( targetLanguage, equivalentTargetPage );
-	targetLanguageDisplay = $.uls.data.getAutonym( targetLanguage );
-
-	message = mw.message(
+	const message = mw.message(
 		'cx-selected-source-page-error-page-exists',
 		equivalentTargetPageLink, targetLanguageDisplay
 	);
@@ -656,11 +638,9 @@ mw.cx.SelectedSourcePage.prototype.showPageExistsError = function ( equivalentTa
  * @param {string} targetLanguage
  */
 mw.cx.SelectedSourcePage.prototype.showTitleInUseError = function ( existingTargetTitle, targetLanguage ) {
-	var existingTargetTitleLink, message;
+	const existingTargetTitleLink = this.siteMapper.getPageUrl( targetLanguage, existingTargetTitle );
 
-	existingTargetTitleLink = this.siteMapper.getPageUrl( targetLanguage, existingTargetTitle );
-
-	message = mw.message(
+	const message = mw.message(
 		'cx-selected-source-page-error-title-in-use',
 		existingTargetTitleLink
 	);

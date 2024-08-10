@@ -7,10 +7,11 @@ namespace ContentTranslation\HookHandler;
 use ContentTranslation\SiteMapper;
 use ContentTranslation\Store\TranslationStore;
 use ExtensionRegistry;
-use MediaWiki\Hook\BeforePageDisplayHook;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Output\Hook\BeforePageDisplayHook;
+use MediaWiki\Output\OutputPage;
 use MediaWiki\Revision\RevisionStore;
-use OutputPage;
+use MobileContext;
 use Skin;
 use Wikimedia\Rdbms\ILoadBalancer;
 
@@ -55,6 +56,7 @@ class RecentTranslationEntrypointRegistrationHandler implements BeforePageDispla
 		$isMobileView = false;
 
 		if ( ExtensionRegistry::getInstance()->isLoaded( 'MobileFrontend' ) ) {
+			/** @var MobileContext $mobileContext */
 			$mobileContext = MediaWikiServices::getInstance()->getService( 'MobileFrontend.Context' );
 			$isMobileView = $mobileContext->shouldDisplayMobileView();
 		}

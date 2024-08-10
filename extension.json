@@ -65,11 +65,27 @@
 				"ContentTranslation.WikidataIdFetcher"
 			]
 		},
+		"axArticleFooterEntrypointRegistrar": {
+			"class": "ContentTranslation\\HookHandler\\AxArticleFooterEntrypointRegistrationHandler",
+			"services": [
+				"ConfigFactory",
+				"ContentLanguage"
+			],
+			"optional_services": [
+				"DisambiguatorLookup"
+			]
+		},
 		"mfFrequentLanguagesEntrypointRegistrar": {
 			"class": "ContentTranslation\\HookHandler\\MfFrequentLanguagesEntrypointRegistrationHandler",
 			"services": [
 				"LanguageFactory",
 				"LanguageNameUtils"
+			]
+		},
+		"mfLanguageSearcherEntrypointsRegistrar": {
+			"class": "ContentTranslation\\HookHandler\\MfLanguageSearcherEntrypointsRegistrationHandler",
+			"services": [
+				"ContentTranslation.PreferenceHelper"
 			]
 		},
 		"ulsRelevantLanguagesEntrypointRegistrar": {
@@ -111,6 +127,7 @@
 		"BeforePageDisplay": [
 			"main",
 			"mfFrequentLanguagesEntrypointRegistrar",
+			"mfLanguageSearcherEntrypointsRegistrar",
 			"ulsRelevantLanguagesEntrypointRegistrar",
 			"ulsQuickActionEntrypointRegistrar",
 			"recentEditEntrypointRegistrar",
@@ -259,6 +276,13 @@
 			"services": [
 				"ContentTranslation.UserService"
 			]
+		},
+		"automatictranslationdenselanguages": {
+			"class": "ContentTranslation\\ActionApi\\ApiQueryAutomaticTranslationDenseLanguages",
+			"services": [
+				"HttpRequestFactory",
+				"MainWANObjectCache"
+			]
 		}
 	},
 	"APIMetaModules": {
@@ -270,7 +294,8 @@
 	"MessagesDirs": {
 		"ContentTranslation": [
 			"i18n",
-			"i18n/api"
+			"i18n/api",
+			"i18n/minT"
 		]
 	},
 	"SpecialPages": {
@@ -285,6 +310,12 @@
 			"class": "ContentTranslation\\Special\\SpecialContentTranslationStats",
 			"services": [
 				"SkinFactory"
+			]
+		},
+		"AutomaticTranslation": {
+			"class": "ContentTranslation\\Special\\SpecialAutomaticTranslation",
+			"services": [
+				"LanguageNameUtils"
 			]
 		}
 	},
@@ -335,7 +366,7 @@
 				"view": "//$1.wikipedia.org/wiki/$2",
 				"action": "//$1.wikipedia.org/w/index.php?title=$2",
 				"api": "//$1.wikipedia.org/w/api.php",
-				"cx": "https://cxserver.wikimedia.org/v1",
+				"cx": "http://localhost:8080/v1",
 				"cookieDomain": null,
 				"restbase": "//$1.wikipedia.org/api/rest_v1"
 			}
@@ -379,7 +410,7 @@
 		},
 		"RecommendToolAPIURL": {
 			"description": "Web API URL for translation recommendation tool",
-			"value": "https://recommend.wmflabs.org/types/translation/v1/articles"
+			"value": "https://api.wikimedia.org/service/lw/recommendation/v1/api"
 		},
 		"ContentTranslationVersion": {
 			"value": "2"
@@ -436,6 +467,10 @@
 		"DraftMaxAge": {
 			"description": "Maximum age of unpublished drafts before they're purged from DB. Expressed in days and defaults to approximate value of 15 months.",
 			"value": 456
+		},
+		"AutomaticTranslationLanguageSearcherEntrypointEnabledLanguages": {
+			"description": "Languages for which the mobile language searcher entrypoint for Automatic Translation should be enabled",
+			"value": null
 		}
 	},
 	"ResourceModules": {
@@ -556,8 +591,10 @@
 				"cx-draft-cancel-button-label",
 				"cx-draft-discard-button-label",
 				"cx-error-server-connection",
+				"cx-favorite-add",
 				"cx-favorite-added-for-later",
 				"cx-favorite-added-for-later-detail",
+				"cx-favorite-remove",
 				"cx-favorite-removed",
 				"cx-feedback-link",
 				"cx-header-progressbar-text",
@@ -578,6 +615,7 @@
 				"cx-source-page-selector-no-suggestions",
 				"cx-source-page-selector-no-search-results",
 				"cx-suggestionlist-collapse",
+				"cx-suggestionlist-discard",
 				"cx-suggestionlist-empty-desc",
 				"cx-suggestionlist-empty-desc-recommend-link-text",
 				"cx-suggestionlist-empty-title",
@@ -618,7 +656,6 @@
 				"cx-sx-published-section-invitation-title",
 				"cx-sx-published-section-invitation-missing-sections-info"
 			],
-			"es6": true,
 			"dependencies": [
 				"vue",
 				"mw.cx.SiteMapper",
@@ -651,7 +688,8 @@
 			],
 			"codexComponents": [
 				"CdxButton",
-				"CdxIcon"
+				"CdxIcon",
+				"CdxDialog"
 			],
 			"messages": [
 				"cx-dashboard-header",
@@ -838,7 +876,13 @@
 				"sx-confirm-draft-translation-start-dialog-explanation-second-line",
 				"sx-confirm-draft-translation-start-dialog-explanation-third-line",
 				"sx-confirm-draft-translation-start-button-label",
-				"sx-published-translation-new-translation-button-label"
+				"sx-published-translation-new-translation-button-label",
+				"cx-unreviewed-translation-dialog-title",
+				"cx-unreviewed-translation-dialog-close-button-aria-label",
+				"cx-unreviewed-translation-dialog-review-translation-button-label",
+				"cx-unreviewed-translation-dialog-close-button-label",
+				"cx-unreviewed-translation-dialog-body",
+				"cx-unreviewed-translation-dialog-learn-more-link-label"
 			],
 			"noflip": true
 		},
@@ -925,7 +969,6 @@
 			]
 		},
 		"ext.cx.uls.quick.actions": {
-			"es6": true,
 			"packageFiles": [
 				"entrypoints/ext.cx.uls.quick.actions.js"
 			],
@@ -1047,7 +1090,6 @@
 			]
 		},
 		"ext.cx.entrypoints.recentedit": {
-			"es6": true,
 			"packageFiles": [
 				"entrypoints/ext.cx.entrypoints.recentedit/index.js",
 				"entrypoints/ext.cx.entrypoints.recentedit/RecentEditEntrypointInvitation.vue"
@@ -1104,7 +1146,6 @@
 			]
 		},
 		"ext.cx.entrypoints.newarticle": {
-			"es6": true,
 			"scripts": [
 				"entrypoints/ext.cx.entrypoints.newarticle.js"
 			],
@@ -1126,21 +1167,18 @@
 			]
 		},
 		"ext.cx.entrypoints.newarticle.veloader": {
-			"es6": true,
 			"scripts": [
 				"entrypoints/ext.cx.entrypoints.newarticle.veloader.js"
 			]
 		},
 		"ext.cx.entrypoints.languagesearcher.init": {
-			"es6": true,
 			"scripts": [
-				"entrypoints/ext.cx.entrypoints.languagesearcher.init.js"
+				"entrypoints/ext.cx.entrypoints.languagesearcher/ext.cx.entrypoints.languagesearcher.init.js"
 			]
 		},
-		"ext.cx.entrypoints.languagesearcher": {
-			"es6": true,
+		"ext.cx.entrypoints.languagesearcher.legacy": {
 			"scripts": [
-				"entrypoints/ext.cx.entrypoints.languagesearcher.js"
+				"entrypoints/ext.cx.entrypoints.languagesearcher/ext.cx.entrypoints.languagesearcher.legacy.js"
 			],
 			"dependencies": [
 				"jquery.uls.data",
@@ -1150,16 +1188,37 @@
 				"cx-campaign-mflanguagesearcher-invite"
 			]
 		},
+		"ext.cx.entrypoints.languagesearcher": {
+			"class": "MediaWiki\\ResourceLoader\\CodexModule",
+			"codexStyleOnly": "true",
+			"codexComponents": [
+				"CdxCard"
+			],
+			"packageFiles": [
+				"entrypoints/ext.cx.entrypoints.languagesearcher/ext.cx.entrypoints.languagesearcher.js",
+				"entrypoints/ext.cx.entrypoints.languagesearcher/LanguageSearcherCardContainer.vue"
+			],
+			"styles": [
+				"entrypoints/styles/ext.cx.entrypoints.languagesearcher.less"
+			],
+			"dependencies": [
+				"vue",
+				"jquery.uls.data",
+				"mw.cx.SiteMapper"
+			],
+			"messages": [
+				"cx-mflanguagesearcher-entrypoint-card-title",
+				"cx-mflanguagesearcher-entrypoint-card-description",
+				"mint-mflanguagesearcher-entrypoint-card-title",
+				"mint-mflanguagesearcher-entrypoint-card-description"
+			]
+		},
 		"ext.cx.entrypoints.mffrequentlanguages": {
-			"es6": true,
 			"scripts": [
 				"entrypoints/ext.cx.entrypoints.mffrequentlanguages.js"
 			],
 			"styles": [
 				"entrypoints/styles/ext.cx.entrypoints.mffrequentlanguages.less"
-			],
-			"dependencies": [
-				"mw.cx.SiteMapper"
 			],
 			"messages": [
 				"sx-missing-languages-entrypoint-panel-text-one-missing",
@@ -1168,7 +1227,6 @@
 			]
 		},
 		"ext.cx.entrypoints.ulsrelevantlanguages": {
-			"es6": true,
 			"packageFiles": [
 				"entrypoints/ext.cx.entrypoints.uls.relevantlanguages.js",
 				"entrypoints/ext.cx.entrypoints.uls.relevantlanguages/CxUlsEntrypoint.vue"
@@ -1190,19 +1248,36 @@
 			]
 		},
 		"ext.cx.entrypoints.newbytranslation": {
-			"es6": true,
-			"scripts": [
-				"entrypoints/ext.cx.entrypoints.newbytranslation.js"
+			"class": "MediaWiki\\ResourceLoader\\CodexModule",
+			"packageFiles": [
+				"entrypoints/ext.cx.entrypoints.newbytranslation/index.js",
+				"entrypoints/ext.cx.entrypoints.newbytranslation/NewByTranslationPopup.vue",
+				{
+					"name": "icons.json",
+					"callback": "MediaWiki\\ResourceLoader\\CodexModule::getIcons",
+					"callbackParam": [
+						"cdxIconLanguage",
+						"cdxIconClose",
+						"cdxIconArticle",
+						"cdxIconArrowNext",
+						"cdxIconSearch",
+						"cdxIconSettings"
+					]
+				}
 			],
 			"styles": [
 				"entrypoints/styles/ext.cx.entrypoints.newbytranslation.less"
 			],
 			"dependencies": [
-				"oojs-ui-widgets",
-				"oojs-ui.styles.icons-content",
-				"oojs-ui.styles.icons-interactions",
+				"vue",
+				"jquery.uls.data",
 				"mw.cx.util",
 				"mw.cx.SiteMapper"
+			],
+			"codexComponents": [
+				"CdxCard",
+				"CdxIcon",
+				"CdxButton"
 			],
 			"messages": [
 				"cx-campaign-newbytranslation-title",
@@ -1213,7 +1288,6 @@
 			]
 		},
 		"ext.cx.entrypoints.newbytranslation.mobile": {
-			"es6": true,
 			"scripts": [
 				"entrypoints/ext.cx.entrypoints.newbytranslation.mobile.js"
 			],
@@ -1232,7 +1306,6 @@
 			]
 		},
 		"ext.cx.entrypoints.contributionsmenu": {
-			"es6": true,
 			"scripts": [
 				"entrypoints/ext.cx.entrypoints.contributionsmenu.js"
 			],
@@ -1453,6 +1526,7 @@
 				"mw.cx.TargetArticle.js",
 				"mw.cx.TranslationController.js",
 				"mw.cx.TranslationTracker.js",
+				"mw.cx.UserPermissionChecker.js",
 				"dm/mw.cx.dm.SectionState.js",
 				"eventlogging/ext.cx.eventlogging.translation.js",
 				"dm/mw.cx.dm.WikiPage.js",
@@ -1731,6 +1805,149 @@
 			},
 			"localBasePath": "",
 			"remoteExtPath": "ContentTranslation"
+		},
+		"mint.styles": {
+			"localBasePath": "minT",
+			"remoteExtPath": "ContentTranslation/minT",
+			"styles": [
+				"styles/mint.less"
+			]
+		},
+		"mint.app": {
+			"localBasePath": "minT/src",
+			"remoteExtPath": "ContentTranslation/minT/src",
+			"packageFiles": [
+				"mintHome.js",
+				"constants.js",
+				"useMintLanguages.js",
+				"useWikipediaSites.js",
+				"wikiSite.js",
+				"debounce.js",
+				"useAutocompletion.js",
+				"useKeyboardNavigation.js",
+				"useLanguageSearch.js",
+				"useState.js",
+				"useApi.js",
+				"useCXServerToken.js",
+				"useRouter.js",
+				"useWikidataSearch.js",
+				"useMediawikiSearch.js",
+				"useSearchResultLanguages.js",
+				"useSiteLinksHelper.js",
+				"useSearch.js",
+				"usePageMetadata.js",
+				"useUrlHelper.js",
+				"useLeadSectionTranslationFetch.js",
+				"useSectionTranslate.js",
+				"useTranslationInitialize.js",
+				"useSectionTitleTranslate.js",
+				"useEventLogging.js",
+				"useSkeletonLoader.js",
+				"mediawikiPage.js",
+				"pageSearchResult.js",
+				"MWLanguageSelector.vue",
+				"SearchTopicPage.vue",
+				"SearchResultItem.vue",
+				"MwSpinner.vue",
+				"ConfirmTopicPage.vue",
+				"ViewTranslationPage.vue",
+				"ViewTranslationPageOptions.vue",
+				"SkeletonLoader.vue",
+				{
+					"name": "icons.json",
+					"callback": "MediaWiki\\ResourceLoader\\CodexModule::getIcons",
+					"callbackParam": [
+						"cdxIconClose",
+						"cdxIconArrowPrevious",
+						"cdxIconArticle",
+						"cdxIconRobot",
+						"cdxIconSpecialPages",
+						"cdxIconArrowNext",
+						"cdxIconSearch",
+						"cdxIconUserGroup",
+						"cdxIconLinkExternal",
+						"cdxIconEdit",
+						"cdxIconShare",
+						"cdxIconFeedback",
+						"cdxIconEllipsis"
+					]
+				},
+				{
+					"name": "initialLanguages.json",
+					"callback": "ContentTranslation\\Special\\SpecialAutomaticTranslation::getInitialLanguagesData"
+				}
+			],
+			"dependencies": [
+				"vue",
+				"@wikimedia/codex",
+				"mediawiki.api",
+				"mediawiki.ForeignApi",
+				"jquery.uls.data",
+				"mw.cx.SiteMapper"
+			],
+			"messages": [
+				"mint-language-selector-input-placeholder",
+				"mint-language-selector-title",
+				"mint-language-selector-suggestions-header",
+				"mint-language-selector-no-search-results",
+				"mint-translation-list-all-languages-option-label",
+				"mint-search-topic-page-header",
+				"mint-search-topic-page-input-placeholder",
+				"mint-search-topic-page-input-aria-label",
+				"mint-search-topic-page-results-container-empty",
+				"mint-confirm-topic-page-header",
+				"mint-confirm-topic-page-automatic-translation-indicator-text",
+				"mint-confirm-topic-page-language-selector-explanation",
+				"mint-confirm-topic-page-go-to-search-button-label",
+				"mint-confirm-topic-page-target-article-link-container-header",
+				"mint-confirm-topic-page-target-article-link-container-details",
+				"mint-confirm-topic-page-target-article-card-read-article-label",
+				"mint-view-translation-page-header",
+				"mint-view-translation-page-disclaimer-header",
+				"mint-view-translation-page-disclaimer-body",
+				"mint-view-translation-page-disclaimer-learn-more-link",
+				"mint-view-translation-page-target-article-container-header",
+				"mint-view-translation-page-target-article-container-details",
+				"mint-view-translation-page-source-article-link-label",
+				"mint-view-translation-content-translation-entrypoint-title",
+				"mint-view-translation-content-translation-entrypoint-description",
+				"mint-view-translation-overlay-header",
+				"mint-view-translation-overlay-source-article-link-label",
+				"mint-view-translation-overlay-target-article-link-label",
+				"mint-view-translation-overlay-cx-entrypoint-label",
+				"mint-view-translation-overlay-share-button-label",
+				"mint-view-translation-overlay-feedback-link-label"
+			]
+		},
+		"ext.ax.articlefooter.entrypoint": {
+			"class": "MediaWiki\\ResourceLoader\\CodexModule",
+			"localBasePath": "minT/entrypoints",
+			"remoteExtPath": "ContentTranslation/minT/entrypoints",
+			"packageFiles": [
+				"ext.ax.articlefooter.entrypoint.js",
+				"ArticleFooterEntrypointCard.vue",
+				{
+					"name": "icons.json",
+					"callback": "MediaWiki\\ResourceLoader\\CodexModule::getIcons",
+					"callbackParam": [
+						"cdxIconArticle",
+						"cdxIconRobot"
+					]
+				}
+			],
+			"dependencies": [
+				"mediawiki.api",
+				"mw.cx.SiteMapper",
+				"vue"
+			],
+			"codexComponents": [
+				"CdxCard",
+				"CdxIcon"
+			],
+			"messages": [
+				"ax-article-footer-entrypoint-card-description",
+				"ax-article-footer-entrypoint-card-supporting-text"
+			]
 		}
 	},
 	"QUnitTestModule": {
@@ -1764,6 +1981,9 @@
 				"ContentTranslationAbuseFilter": "/analytics/legacy/contenttranslationabusefilter/1.0.0"
 			}
 		}
+	},
+	"ConfigRegistry": {
+		"ArticleFooterEntrypoint": "GlobalVarConfig::newInstance"
 	},
 	"ResourceFileModulePaths": {
 		"localBasePath": "modules",

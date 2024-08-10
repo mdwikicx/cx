@@ -6,19 +6,7 @@
 		<div class="cx-uls-entrypoint__header row">
 			<div class="col shrink">
 				<button class="cx-uls-entrypoint__close-button" @click.stop="close">
-					<span>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							:width="size"
-							:height="size"
-							viewBox="0 0 20 20"
-							aria-hidden="true"
-							role="presentation"
-						>
-							<g :fill="iconColor">
-								<path :d="previousIconPath" />
-							</g>
-						</svg>
+					<span class="cx-uls-entrypoint__close-button__icon">
 					</span>
 				</button>
 			</div>
@@ -48,18 +36,8 @@
 					:href="getCXUrlByTargetLanguage( language )"
 				>
 					<span class="cx-uls-entrypoint__body__translation-link-icon">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							:width="size"
-							:height="size"
-							viewBox="0 0 20 20"
-							aria-hidden="true"
-							role="presentation"
-						>
-							<g :fill="iconColor">
-								<path :d="plusIconPath" />
-							</g>
-						</svg>
+						<span class="cx-uls-entrypoint__body__translation-link-icon__add">
+						</span>
 					</span>
 					<span
 						class="cx-uls-entrypoint__body__translation-link-text"
@@ -73,18 +51,8 @@
 					:href="getCXUrlByTargetLanguage( slicedLanguages[0] )"
 				>
 					<span class="cx-uls-entrypoint__body__translation-link-icon">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							:width="size"
-							:height="size"
-							viewBox="0 0 20 20"
-							aria-hidden="true"
-							role="presentation"
-						>
-							<g :fill="iconColor">
-								<path :d="ellipsisIconPath" />
-							</g>
-						</svg>
+						<span class="cx-uls-entrypoint__body__translation-link-icon__ellipsis">
+						</span>
 					</span>
 				</a>
 			</div>
@@ -135,15 +103,10 @@ module.exports = {
 
 		return {
 			close,
-			ellipsisIconPath: 'M 19,10 a 2,2 0 0 1 -2,2 2,2 0 0 1 -2,-2 2,2 0 0 1 2,-2 2,2 0 0 1 2,2 M 5,10 A 2,2 0 0 1 3,12 2,2 0 0 1 1,10 2,2 0 0 1 3,8 2,2 0 0 1 5,10 m 7,0 a 2,2 0 0 1 -2,2 2,2 0 0 1 -2,-2 2,2 0 0 1 2,-2 2,2 0 0 1 2,2',
 			getDir: $.uls.data.getDir,
 			getAutonym: $.uls.data.getAutonym,
-			iconColor: 'currentColor',
-			plusIconPath: 'M11 9V4H9v5H4v2h5v5h2v-5h5V9z',
-			previousIconPath: 'M5.83 9l5.58-5.58L10 2l-8 8 8 8 1.41-1.41L5.83 11H18V9z',
 			getCXUrlByTargetLanguage,
 			showPanel,
-			size: 20,
 			slicedLanguages,
 			sourceLanguage
 		};
@@ -201,6 +164,10 @@ module.exports = {
 		background: none;
 		border: none;
 		align-self: center;
+
+		&__icon {
+			.cdx-mixin-css-icon( @cdx-icon-arrow-previous );
+		}
 	}
 
 	&__body {
@@ -231,6 +198,14 @@ module.exports = {
 				// set display to "flex", so that the height of the outer span is equal to the icon height (20px)
 				display: flex;
 				padding-inline-end: 4px;
+
+				&__ellipsis {
+					.cdx-mixin-css-icon( @cdx-icon-ellipsis );
+				}
+
+				&__add {
+					.cdx-mixin-css-icon( @cdx-icon-add );
+				}
 			}
 
 			&-text {

@@ -6,10 +6,11 @@ namespace ContentTranslation\HookHandler;
 
 use ContentTranslation\SiteMapper;
 use ExtensionRegistry;
-use MediaWiki\Hook\BeforePageDisplayHook;
 use MediaWiki\Languages\LanguageFactory;
 use MediaWiki\Languages\LanguageNameUtils;
 use MediaWiki\MediaWikiServices;
+use MediaWiki\Output\Hook\BeforePageDisplayHook;
+use MobileContext;
 
 class MfFrequentLanguagesEntrypointRegistrationHandler implements BeforePageDisplayHook {
 
@@ -28,6 +29,7 @@ class MfFrequentLanguagesEntrypointRegistrationHandler implements BeforePageDisp
 	public function onBeforePageDisplay( $out, $skin ): void {
 		$isMobileView = false;
 		if ( ExtensionRegistry::getInstance()->isLoaded( 'MobileFrontend' ) ) {
+			/** @var MobileContext $mobileContext */
 			$mobileContext = MediaWikiServices::getInstance()->getService( 'MobileFrontend.Context' );
 			$isMobileView = $mobileContext->shouldDisplayMobileView();
 		}

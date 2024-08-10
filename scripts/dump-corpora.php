@@ -14,12 +14,14 @@ if ( getenv( 'MW_INSTALL_PATH' ) !== false ) {
 require_once "$IP/maintenance/Maintenance.php";
 
 use ContentTranslation\JsonDumpFormatter;
+use ContentTranslation\LoadBalancer;
 use ContentTranslation\Manager\TranslationCorporaManager;
 use ContentTranslation\TmxDumpFormatter;
 use ContentTranslation\Translation;
 use MediaWiki\MediaWikiServices;
 use Wikimedia\Rdbms\IDatabase;
 use Wikimedia\Rdbms\IResultWrapper;
+use Wikimedia\Rdbms\SelectQueryBuilder;
 
 class CXCorporaDump extends Maintenance {
 	private static $sinkTypes = [
@@ -109,6 +111,7 @@ class CXCorporaDump extends Maintenance {
 		[ $sinkClass, $sinkExtension ] = self::$sinkTypes[ $sinkType ];
 
 		// Figure out groups (which translation pairs go to which file)
+		/** @var LoadBalancer $lb */
 		$lb = MediaWikiServices::getInstance()->getService( 'ContentTranslation.LoadBalancer' );
 		$db = $lb->getConnection( DB_REPLICA );
 
@@ -120,10 +123,8 @@ class CXCorporaDump extends Maintenance {
 			$groups = self::groupLanguagePairs( $pairsWithCounts, $splitAt );
 		}
 
-		/**
-		 * Fetch data from corpora table and stream it to the sinks using an exporter
-		 * @type TranslationCorporaManager $corporaManager
-		 */
+		// Fetch data from corpora table and stream it to the sinks using an exporter
+		/** @var TranslationCorporaManager $corporaManager */
 		$corporaManager = MediaWikiServices::getInstance()->getService(
 			'ContentTranslation.TranslationCorporaManager'
 		);
@@ -176,30 +177,26 @@ class CXCorporaDump extends Maintenance {
 	 * @return IResultWrapper
 	 */
 	private static function getLanguagePairs( IDatabase $db, $sourceLanguage, $targetLanguage ) {
-		$tables = 'cx_translations';
-
-		$fields = [
-			'sourceLanguage' => 'translation_source_language',
-			'targetLanguage' => 'translation_target_language',
-			'count' => 'count(*)',
-		];
-
 		$publishedCondition = Translation::getPublishedCondition( $db );
 		$pairs = [ [ $sourceLanguage, $targetLanguage ] ];
 		$languageCondition = self::makeLanguageConditions( $db, $pairs );
-		$conditions = $db->makeList(
-			[ $publishedCondition, $languageCondition ],
-			LIST_AND
-		);
 
-		$options = [
-			'GROUP BY' => [ 'translation_source_language', 'translation_target_language' ],
-			'ORDER BY' => [ 'translation_target_language ASC', 'count DESC' ],
-		];
-
-		$res = $db->select( $tables, $fields, $conditions, __METHOD__, $options );
-
-		return $res;
+		return $db->newSelectQueryBuilder()
+			->select( [
+				'sourceLanguage' => 'translation_source_language',
+				'targetLanguage' => 'translation_target_language',
+				'count' => 'COUNT(*)',
+			] )
+			->from( 'cx_translations' )
+			->where( [
+				$publishedCondition,
+				$languageCondition
+			] )
+			->groupBy( [ 'translation_source_language', 'translation_target_language' ] )
+			->orderBy( 'translation_target_language', SelectQueryBuilder::SORT_ASC )
+			->orderBy( 'count', SelectQueryBuilder::SORT_DESC )
+			->caller( __METHOD__ )
+			->fetchResultSet();
 	}
 
 	private static function makeLanguageConditions( IDatabase $db, array $pairs ) {
@@ -280,24 +277,22 @@ class CXCorporaDump extends Maintenance {
 	}
 
 	private static function getTranslations( $db, $pairs ) {
-		$tables = 'cx_translations';
-
-		$fields = [
-			'id' => 'translation_id',
-			'sourceLanguage' => 'translation_source_language',
-			'targetLanguage' => 'translation_target_language',
-		];
-
 		$publishedCondition = Translation::getPublishedCondition( $db );
 		$languageCondition = self::makeLanguageConditions( $db, $pairs );
-		$conditions = $db->makeList(
-			[ $publishedCondition, $languageCondition ],
-			LIST_AND
-		);
 
-		$res = $db->select( $tables, $fields, $conditions, __METHOD__ );
-
-		return $res;
+		return $db->newSelectQueryBuilder()
+			->select( [
+				'id' => 'translation_id',
+				'sourceLanguage' => 'translation_source_language',
+				'targetLanguage' => 'translation_target_language',
+			] )
+			->from( 'cx_translations' )
+			->where( [
+				$publishedCondition,
+				$languageCondition
+			] )
+			->caller( __METHOD__ )
+			->fetchResultSet();
 	}
 
 	private static function getFormatter( $format, $pairName ) {

@@ -12,10 +12,10 @@ mw.cx.init = {};
  * @param {mw.cx.dm.WikiPage} sourceWikiPage
  * @param {mw.cx.dm.WikiPage} targetWikiPage
  * @param {Object} config Standard services TODO not optional so should not be called config
- * @cfg {mw.cx.SiteMapper} siteMapper
- * @cfg {string} [campaign] String indicating which CTA was used to start this translation
+ * @param {mw.cx.SiteMapper} config.siteMapper
+ * @param {string} [config.campaign] String indicating which CTA was used to start this translation
  */
-mw.cx.init.Translation = function MwCXInitTranslation(sourceWikiPage, targetWikiPage, config) {
+mw.cx.init.Translation = function MwCXInitTranslation( sourceWikiPage, targetWikiPage, config ) {
 	this.sourceWikiPage = sourceWikiPage;
 	this.targetWikiPage = targetWikiPage;
 
@@ -30,8 +30,7 @@ mw.cx.init.Translation = function MwCXInitTranslation(sourceWikiPage, targetWiki
 	this.config.targetLanguage = targetWikiPage.getLanguage();
 	this.config.targetSectionTitle = targetWikiPage.getSectionTitle();
 
-	this.mainNamespaceId = mw.config.get('wgNamespaceIds')[''];
-	this.userNamespaceId = mw.config.get('wgNamespaceIds').user;
+	this.mainNamespaceId = mw.config.get( 'wgNamespaceIds' )[ '' ];
 
 	// @var {ve.init.mw.CXTarget}
 	this.veTarget = null;
@@ -47,50 +46,50 @@ mw.cx.init.Translation = function MwCXInitTranslation(sourceWikiPage, targetWiki
  * Initialize translation.
  */
 mw.cx.init.Translation.prototype.init = function () {
-	if (mw.user.isAnon()) {
-		mw.hook('mw.cx.error.anonuser').fire();
+	if ( mw.user.isAnon() ) {
+		mw.hook( 'mw.cx.error.anonuser' ).fire();
 		return;
 	}
-	if (this.config.campaign) {
-		mw.hook('mw.cx.cta.accept').fire(
+	if ( this.config.campaign ) {
+		mw.hook( 'mw.cx.cta.accept' ).fire(
 			this.config.campaign,
 			this.sourceWikiPage.getLanguage(),
 			this.targetWikiPage.getLanguage()
 		);
 	}
-	this.translationView = new mw.cx.ui.TranslationView(this.config);
-	this.veTarget = ve.init.mw.targetFactory.create('cx', this.translationView, this.config);
+	this.translationView = new mw.cx.ui.TranslationView( this.config );
+	this.veTarget = ve.init.mw.targetFactory.create( 'cx', this.translationView, this.config );
 	// Paint the initial UI.
-	this.attachToDOM(this.veTarget);
+	this.attachToDOM( this.veTarget );
 
-	this.veTarget.connect(this, { namespaceChange: 'onNamespaceChange' });
+	this.veTarget.connect( this, { namespaceChange: 'onNamespaceChange' } );
 
 	// TODO: Use mw.libs.ve.targetLoader.loadModules instead of manually getting the plugin
 	// modules and manually initializing the platform
 	const platformPromise = new ve.init.mw.Platform().initialize();
 	const translationPromise = this.fetchTranslationData();
-	const pluginModules = mw.config.get('wgVisualEditorConfig').pluginModules;
-	const modulePromise = mw.loader.using(['mw.cx.visualEditor'].concat(pluginModules));
+	const pluginModules = mw.config.get( 'wgVisualEditorConfig' ).pluginModules;
+	const modulePromise = mw.loader.using( [ 'mw.cx.visualEditor' ].concat( pluginModules ) );
 
-	Promise.all([translationPromise, modulePromise, platformPromise])
-		.then(([[sourcePageContent, draft]]) => {
+	Promise.all( [ translationPromise, modulePromise, platformPromise ] )
+		.then( ( [ [ sourcePageContent, draft ] ] ) => {
 			// Set the link cache for source language
 			ve.init.platform.sourceLinkCache = new ve.init.mw.LinkCache(
-				this.config.siteMapper.getApi(this.sourceWikiPage.getLanguage())
+				this.config.siteMapper.getApi( this.sourceWikiPage.getLanguage() )
 			);
 
 			// Set the link cache for target language
 			ve.init.platform.linkCache = new ve.init.mw.LinkCache(
-				this.config.siteMapper.getApi(this.targetWikiPage.getLanguage())
+				this.config.siteMapper.getApi( this.targetWikiPage.getLanguage() )
 			);
 
-			this.sourceWikiPage.setRevision(sourcePageContent.revision);
+			this.sourceWikiPage.setRevision( sourcePageContent.revision );
 
-			return this.initTranslationModel(sourcePageContent.segmentedContent, draft).then((translationModel) => {
+			return this.initTranslationModel( sourcePageContent.segmentedContent, draft ).then( ( translationModel ) => {
 				this.translationModel = translationModel;
 
-				if (draft) {
-					translationModel.setSavedTranslation(draft);
+				if ( draft ) {
+					translationModel.setSavedTranslation( draft );
 				}
 
 				// Initialize translation controller
@@ -98,57 +97,63 @@ mw.cx.init.Translation.prototype.init = function () {
 					translationModel, this.veTarget, this.config.siteMapper, this.config
 				);
 
-				this.veTarget.setTranslation(translationModel);
+				this.veTarget.setTranslation( translationModel );
 
 				this.checkIfUserCanPublish();
-				if (translationModel.isChangedSignificantly()) {
-					this.addChangedSignificantlyIssue(translationModel);
+				if ( translationModel.isChangedSignificantly() ) {
+					this.addChangedSignificantlyIssue( translationModel );
 				}
 
-				if (translationModel.isSectionTranslation()) {
+				if ( translationModel.isSectionTranslation() ) {
 					this.translationView.markSectionTranslation();
 				} else {
 					translationModel.initCategories(
-						this.processCategories(sourcePageContent.categories)
+						this.processCategories( sourcePageContent.categories )
 					);
-					const categoryUI = new mw.cx.ui.Categories(translationModel, this.config);
-					this.translationView.showCategories(categoryUI);
+					const categoryUI = new mw.cx.ui.Categories( translationModel, this.config );
+					this.translationView.showCategories( categoryUI );
 				}
-				if (draft) {
-					mw.hook('mw.cx.draft.restored').fire();
+				if ( draft ) {
+					mw.hook( 'mw.cx.draft.restored' ).fire();
 				}
-				mw.log('[CX] Translation initialized successfully');
-			});
-		})
-		.catch(() => this.initializationError());
+				mw.log( '[CX] Translation initialized successfully' );
+			} );
+		} )
+		.catch( () => this.initializationError() );
 
 	this.addFeedbackLink();
 };
 
 /**
+ * @typedef {Array} TranslationData
+ * @property {Object} 0 Data from fetchSourcePageContent
+ * @property {mw.cx.dm.DraftTranslationDTO|null} 1 Data from fetchDraftTranslation
+ */
+
+/**
  * Fetch all data necessary to start a translation.
  *
- * @return {Promise<[Object, mw.cx.dm.DraftTranslationDTO|null]>}
+ * @return {Promise<TranslationData>} Translation data tuple
  */
 mw.cx.init.Translation.prototype.fetchTranslationData = function () {
-	mw.log('[CX] Fetching Source page...');
+	mw.log( '[CX] Fetching Source page...' );
 	const sourcePageFetchPromise = this.fetchSourcePageContent(
 		this.sourceWikiPage,
 		this.targetWikiPage.getLanguage(),
 		this.config.siteMapper
-	).catch((error) => this.fetchSourcePageContentError(error.status));
+	).catch( ( error ) => this.fetchSourcePageContentError( error.status ) );
 
-	mw.log('[CX] Checking existing translation...');
+	mw.log( '[CX] Checking existing translation...' );
 	const draftFetchPromise = this.fetchDraftTranslation(
 		this.sourceWikiPage.getTitle(),
 		this.sourceWikiPage.getLanguage(),
 		this.targetWikiPage.getLanguage(),
 		this.sourceWikiPage.getSectionTitle()
 	)
-		.then(({ translation, conflict }) => this.fetchDraftTranslationSuccess(translation, conflict))
-		.catch(() => this.fetchDraftTranslationError());
+		.then( ( { translation, conflict } ) => this.fetchDraftTranslationSuccess( translation, conflict ) )
+		.catch( () => this.fetchDraftTranslationError() );
 
-	return Promise.all([sourcePageFetchPromise, draftFetchPromise]);
+	return Promise.all( [ sourcePageFetchPromise, draftFetchPromise ] );
 };
 
 /**
@@ -159,7 +164,7 @@ mw.cx.init.Translation.prototype.fetchTranslationData = function () {
  * @param {mw.cx.dm.DraftTranslationDTO|null} [draft] Saved translation if any.
  * @return {Promise}
  */
-mw.cx.init.Translation.prototype.initTranslationModel = function (sourceHtml, draft) {
+mw.cx.init.Translation.prototype.initTranslationModel = function ( sourceHtml, draft ) {
 	const translationUnits = draft && draft.translationUnits;
 
 	const targetDom = mw.cx.dm.Translation.static.getSourceDom(
@@ -171,37 +176,37 @@ mw.cx.init.Translation.prototype.initTranslationModel = function (sourceHtml, dr
 	);
 
 	let numberOfUnrestoredSections = 0;
-	for (const translationUnitId in translationUnits) {
-		if (!translationUnits[translationUnitId].restored) {
+	for ( const translationUnitId in translationUnits ) {
+		if ( !translationUnits[ translationUnitId ].restored ) {
 			numberOfUnrestoredSections++;
 		}
 	}
 
 	// If no translated section was lost, create source DOM and return early
 	// This should cover initial start of translation, when there's no draft at all.
-	if (numberOfUnrestoredSections < 1) {
-		const sourceDom = mw.cx.dm.Translation.static.getSourceDom(sourceHtml, this.sourceWikiPage.getSectionTitle());
+	if ( numberOfUnrestoredSections < 1 ) {
+		const sourceDom = mw.cx.dm.Translation.static.getSourceDom( sourceHtml, this.sourceWikiPage.getSectionTitle() );
 
-		const translationModel = new mw.cx.dm.Translation(this.sourceWikiPage, this.targetWikiPage, sourceDom, targetDom);
-		return Promise.resolve(translationModel);
+		const translationModel = new mw.cx.dm.Translation( this.sourceWikiPage, this.targetWikiPage, sourceDom, targetDom );
+		return Promise.resolve( translationModel );
 	}
 
 	// Update revision of source page
-	this.sourceWikiPage.setRevision(draft.sourceRevisionId);
+	this.sourceWikiPage.setRevision( draft.sourceRevisionId );
 
 	return this.fetchSourcePageContent(
 		this.sourceWikiPage,
 		this.targetWikiPage.getLanguage(),
 		this.config.siteMapper
 	)
-		.then((sourcePageContent) => {
+		.then( ( sourcePageContent ) => {
 			// Reset restoration status for all translation units
-			for (const id in translationUnits) {
-				translationUnits[id].restored = false;
+			for ( const id in translationUnits ) {
+				translationUnits[ id ].restored = false;
 			}
 
 			const updatedSourceHtml = sourcePageContent.segmentedContent;
-			const updatedSourceDom = mw.cx.dm.Translation.static.getSourceDom(updatedSourceHtml, this.sourceWikiPage.getSectionTitle());
+			const updatedSourceDom = mw.cx.dm.Translation.static.getSourceDom( updatedSourceHtml, this.sourceWikiPage.getSectionTitle() );
 			const updatedTargetDom = mw.cx.dm.Translation.static.getSourceDom(
 				updatedSourceHtml,
 				this.sourceWikiPage.getSectionTitle(),
@@ -210,18 +215,18 @@ mw.cx.init.Translation.prototype.initTranslationModel = function (sourceHtml, dr
 				this.sourceWikiPage.getLanguage()
 			);
 
-			const updatedTranslationModel = new mw.cx.dm.Translation(this.sourceWikiPage, this.targetWikiPage, updatedSourceDom, updatedTargetDom);
-			updatedTranslationModel.setChangedSignificantly(true);
+			const updatedTranslationModel = new mw.cx.dm.Translation( this.sourceWikiPage, this.targetWikiPage, updatedSourceDom, updatedTargetDom );
+			updatedTranslationModel.setChangedSignificantly( true );
 
 			let uri = new mw.Uri();
 			// Append revision number to URL
-			uri = uri.extend({ revision: draft.sourceRevisionId });
-			window.history.pushState(null, document.title, uri.toString());
+			uri = uri.extend( { revision: draft.sourceRevisionId } );
+			window.history.pushState( null, document.title, uri.toString() );
 
 			return updatedTranslationModel;
 
-		})
-		.catch((error) => this.fetchSourcePageContentError(error.status));
+		} )
+		.catch( ( error ) => this.fetchSourcePageContentError( error.status ) );
 };
 
 /**
@@ -229,9 +234,9 @@ mw.cx.init.Translation.prototype.initTranslationModel = function (sourceHtml, dr
  */
 mw.cx.init.Translation.prototype.initializationError = function () {
 	// Any error in the above deferreds is critical
-	this.translationView.showMessage('error', mw.msg('cx-init-critical-error'));
+	this.translationView.showMessage( 'error', mw.msg( 'cx-init-critical-error' ) );
 	// Nothing happens beyond this. Some internal error happened.
-	mw.log.error('[CX] Translation initialization failed.');
+	mw.log.error( '[CX] Translation initialization failed.' );
 };
 
 /**
@@ -240,8 +245,8 @@ mw.cx.init.Translation.prototype.initializationError = function () {
  * @private
  * @param {ve.init.mw.CXTarget} veTarget
  */
-mw.cx.init.Translation.prototype.attachToDOM = function (veTarget) {
-	$('body').append(veTarget.$element);
+mw.cx.init.Translation.prototype.attachToDOM = function ( veTarget ) {
+	$( 'body' ).append( veTarget.$element );
 };
 
 /**
@@ -253,51 +258,44 @@ mw.cx.init.Translation.prototype.attachToDOM = function (veTarget) {
  * @param {mw.cx.SiteMapper} siteMapper
  * @return {Promise}
  */
-mw.cx.init.Translation.prototype.fetchSourcePageContent = function (wikiPage, targetLanguage, siteMapper) {
-	const title = wikiPage.getTitle().replace(/ /g, '_')
+mw.cx.init.Translation.prototype.fetchSourcePageContent = function ( wikiPage, targetLanguage, siteMapper ) {
 	const fetchParams = {
-		$sourcelanguage: siteMapper.getWikiDomainCode(wikiPage.getLanguage()),
+		$sourcelanguage: siteMapper.getWikiDomainCode( wikiPage.getLanguage() ),
 		$targetlanguage: targetLanguage,
 		// Manual normalisation to avoid redirects on spaces but not to break namespaces
-		$title: title
+		$title: wikiPage.getTitle().replace( / /g, '_' )
 	};
+
 	let apiURL = '/page/$sourcelanguage/$targetlanguage/$title';
 
 	// If revision is requested, load that revision of page.
-	if (wikiPage.getRevision()) {
+	if ( wikiPage.getRevision() ) {
 		fetchParams.$revision = wikiPage.getRevision();
 		apiURL += '/$revision';
 	}
 
-	const fetchPageUrl = siteMapper.getCXServerUrl(apiURL, fetchParams);
+	const fetchPageUrl = siteMapper.getCXServerUrl( apiURL, fetchParams );
 
-	const options = {
-		method: 'GET',
-		dataType: 'json'
-	}
-	const result = fetch(fetchPageUrl, options).then((response) => {
-		if (!response.ok) {
-			console.error("Error fetching source page: " + response.statusText);
-			return Promise.reject(response);
+	return fetch( fetchPageUrl ).then( ( response ) => {
+		if ( !response.ok ) {
+			return Promise.reject( response );
 		}
 
 		return response.json();
-	});
-
-	return result;
+	} );
 };
 
-mw.cx.init.Translation.prototype.fetchSourcePageContentError = function (status) {
-	if (status === 404) {
-		mw.hook('mw.cx.error').fire(
+mw.cx.init.Translation.prototype.fetchSourcePageContentError = function ( status ) {
+	if ( status === 404 ) {
+		mw.hook( 'mw.cx.error' ).fire(
 			mw.msg(
 				'cx-error-page-not-found',
 				this.sourceWikiPage.getTitle(),
-				$.uls.data.getAutonym(this.sourceWikiPage.getLanguage())
+				$.uls.data.getAutonym( this.sourceWikiPage.getLanguage() )
 			)
 		);
 	} else {
-		mw.hook('mw.cx.error').fire(mw.msg('cx-error-server-connection'));
+		mw.hook( 'mw.cx.error' ).fire( mw.msg( 'cx-error-server-connection' ) );
 	}
 };
 
@@ -329,7 +327,7 @@ mw.cx.init.Translation.prototype.fetchDraftTranslation = function (
 	targetLanguage,
 	sourceSectionTitle
 ) {
-	return new Promise((resolve, reject) => {
+	return new Promise( ( resolve, reject ) => {
 		const params = {
 			action: 'query',
 			list: 'contenttranslation',
@@ -340,29 +338,29 @@ mw.cx.init.Translation.prototype.fetchDraftTranslation = function (
 			formatversion: 2
 		};
 
-		if (sourceSectionTitle) {
+		if ( sourceSectionTitle ) {
 			params.sourcesectiontitle = sourceSectionTitle;
 		}
-		const jQueryPromise = new mw.Api().get(params).then((response) => {
+		const jQueryPromise = new mw.Api().get( params ).then( ( response ) => {
 			const payload = response.query && response.query.contenttranslation;
 
 			let conflict = null;
-			if (payload && payload.hasConflicts) {
+			if ( payload && payload.hasConflicts ) {
 				conflict = {
 					name: payload.translatorName,
 					gender: payload.translatorGender
 				};
 			}
 			return {
-				translation: payload && new mw.cx.dm.DraftTranslationDTO(payload.translation),
+				translation: payload && new mw.cx.dm.DraftTranslationDTO( payload.translation ),
 				conflict
 			};
-		});
+		} );
 
 		jQueryPromise
-			.then((translation) => resolve(translation))
-			.fail((errorCode, details) => reject({ errorCode, details }));
-	});
+			.then( ( translation ) => resolve( translation ) )
+			.fail( ( errorCode, details ) => reject( { errorCode, details } ) );
+	} );
 };
 
 /**
@@ -373,35 +371,35 @@ mw.cx.init.Translation.prototype.fetchDraftTranslation = function (
  * @param {{ name: string, gender: string}|null} conflict
  * @return {Promise<mw.cx.dm.DraftTranslationDTO|null>} Draft or null.
  */
-mw.cx.init.Translation.prototype.fetchDraftTranslationSuccess = function (draft, conflict) {
+mw.cx.init.Translation.prototype.fetchDraftTranslationSuccess = function ( draft, conflict ) {
 	// Do not allow two users to start a draft at the same time. The API only returns
 	// a conflict (providing the conflicting translator's name and gender, if this is the case.
-	if (conflict) {
-		mw.log('[CX] Existing translation in last 24 hours by another translator found.');
-		this.translationView.showConflictWarning(conflict.name, conflict.gender);
+	if ( conflict ) {
+		mw.log( '[CX] Existing translation in last 24 hours by another translator found.' );
+		this.translationView.showConflictWarning( conflict.name, conflict.gender );
 		// Stop further processing
-		return Promise.resolve(null);
+		return Promise.resolve( null );
 	}
 
-	if (!draft) {
+	if ( !draft ) {
 		// No draft exists
-		mw.log('[CX] No existing translation found');
-		return Promise.resolve(null);
+		mw.log( '[CX] No existing translation found' );
+		return Promise.resolve( null );
 	}
 
 	// Don't restore deleted drafts
-	if (draft.status === 'deleted') {
-		mw.log('[CX] Existing translation found. But it is a deleted one.');
-		return Promise.resolve(null);
+	if ( draft.status === 'deleted' ) {
+		mw.log( '[CX] Existing translation found. But it is a deleted one.' );
+		return Promise.resolve( null );
 	}
 
-	return Promise.resolve(draft);
+	return Promise.resolve( draft );
 };
 
 mw.cx.init.Translation.prototype.fetchDraftTranslationError = function () {
 	// XXX
-	mw.hook('mw.cx.error').fire('Unable to fetch draft information.');
-	mw.log('[CX]', arguments);
+	mw.hook( 'mw.cx.error' ).fire( 'Unable to fetch draft information.' );
+	mw.log( '[CX]', arguments );
 };
 
 /**
@@ -412,34 +410,34 @@ mw.cx.init.Translation.prototype.fetchDraftTranslationError = function () {
  * @return {Object} Array of categories transformed into object of
  * sourceTitle:targetTitle property-value pairs
  */
-mw.cx.init.Translation.prototype.processCategories = function (fetchedCategories) {
+mw.cx.init.Translation.prototype.processCategories = function ( fetchedCategories ) {
 	const categories = {};
 	let length = fetchedCategories.length;
 
-	while (length--) {
-		const category = fetchedCategories[length];
-		categories[category.sourceTitle] = category.targetTitle || null;
+	while ( length-- ) {
+		const category = fetchedCategories[ length ];
+		categories[ category.sourceTitle ] = category.targetTitle || null;
 	}
 
 	return categories;
 };
 
 mw.cx.init.Translation.prototype.addFeedbackLink = function () {
-	const feedback = new OO.ui.ButtonWidget({
-		label: mw.msg('cx-feedback-link'),
+	const feedback = new OO.ui.ButtonWidget( {
+		label: mw.msg( 'cx-feedback-link' ),
 		icon: 'speechBubbles',
 		href: '//www.mediawiki.org/wiki/Talk:Content_translation',
 		target: '_blank',
 		framed: false,
-		classes: ['cx-feedback-link'],
-		flags: ['progressive']
-	});
-	this.translationView.addItems([feedback]);
+		classes: [ 'cx-feedback-link' ],
+		flags: [ 'progressive' ]
+	} );
+	this.translationView.addItems( [ feedback ] );
 };
 
-mw.cx.init.Translation.prototype.addChangedSignificantlyIssue = function (translationModel) {
+mw.cx.init.Translation.prototype.addChangedSignificantlyIssue = function ( translationModel ) {
 	this.translationView.showViewIssuesMessage(
-		mw.msg('cx-infobar-old-version'), 'old-version', 'warning'
+		mw.msg( 'cx-infobar-old-version' ), 'old-version', 'warning'
 	);
 
 	const diff = this.config.siteMapper.getPageUrl(
@@ -453,39 +451,39 @@ mw.cx.init.Translation.prototype.addChangedSignificantlyIssue = function (transl
 	);
 
 	const translationIssuesParams = {
-		title: mw.msg('cx-tools-linter-old-revision'),
+		title: mw.msg( 'cx-tools-linter-old-revision' ),
 		resolvable: true
 	};
 
-	if (!translationModel.hasBeenPublished()) {
+	if ( !translationModel.hasBeenPublished() ) {
 		translationIssuesParams.additionalButtons = [
 			{
 				icon: 'reload',
-				label: mw.msg('cx-tools-linter-old-revision-label'),
-				action: this.restartTranslation.bind(this)
+				label: mw.msg( 'cx-tools-linter-old-revision-label' ),
+				action: this.restartTranslation.bind( this )
 			}
 		];
 	}
 
-	translationModel.addUnattachedIssues([
+	translationModel.addUnattachedIssues( [
 		new mw.cx.dm.TranslationIssue(
 			'old-version', // Issue name
-			mw.message('cx-tools-linter-old-revision-message', diff), // Message body
+			mw.message( 'cx-tools-linter-old-revision-message', diff ), // Message body
 			translationIssuesParams
 		)
-	]);
+	] );
 };
 
 mw.cx.init.Translation.prototype.restartTranslation = function () {
-	OO.ui.getWindowManager().openWindow('message', {
-		title: mw.msg('cx-tools-linter-restart-translation-title'),
-		message: mw.msg('cx-tools-linter-restart-translation-message'),
+	OO.ui.getWindowManager().openWindow( 'message', {
+		title: mw.msg( 'cx-tools-linter-restart-translation-title' ),
+		message: mw.msg( 'cx-tools-linter-restart-translation-message' ),
 		actions: [
-			{ action: 'restart', label: mw.msg('cx-tools-linter-old-revision-label'), flags: ['primary', 'destructive'] },
-			{ action: 'cancel', label: mw.msg('cx-tools-linter-restart-translation-cancel'), flags: 'safe' }
+			{ action: 'restart', label: mw.msg( 'cx-tools-linter-old-revision-label' ), flags: [ 'primary', 'destructive' ] },
+			{ action: 'cancel', label: mw.msg( 'cx-tools-linter-restart-translation-cancel' ), flags: 'safe' }
 		]
-	}).closed.then(function (data) {
-		if (!data || data.action !== 'restart') {
+	} ).closed.then( function ( data ) {
+		if ( !data || data.action !== 'restart' ) {
 			return;
 		}
 
@@ -500,93 +498,31 @@ mw.cx.init.Translation.prototype.restartTranslation = function () {
 			sourcetitle: sourceTitle
 		};
 
-		return new mw.Api().postWithToken('csrf', apiParams).done(function () {
+		return new mw.Api().postWithToken( 'csrf', apiParams ).done( function () {
 			const uri = new mw.Uri();
 			delete uri.query.revision;
 
-			this.config.siteMapper.setCXToken(sourceLanguage, targetLanguage, sourceTitle);
+			this.config.siteMapper.setCXToken( sourceLanguage, targetLanguage, sourceTitle );
 
 			location.href = uri.getRelativePath();
-		}.bind(this));
-	}.bind(this));
-};
-
-mw.cx.init.Translation.prototype.isUserAllowedToPublishToMainNamespace = function () {
-	let publishConfig = (mw.config.get('wgContentTranslationPublishRequirements') || []).userGroups;
-
-	if (typeof publishConfig === 'string') {
-		publishConfig = [publishConfig];
-	}
-
-	if (!Array.isArray(publishConfig)) {
-		mw.log.error('Publish requirement config should be of type array or string');
-		return true;
-	}
-
-	const userGroups = mw.config.get('wgUserGroups') || [];
-	return publishConfig.some((userGroup) => userGroups.indexOf(userGroup) > -1);
+		}.bind( this ) );
+	}.bind( this ) );
 };
 
 mw.cx.init.Translation.prototype.checkIfUserCanPublish = function () {
-	if (this.veTarget.getPublishNamespace() !== this.mainNamespaceId) {
-		return;
-	}
-
-	if (!this.isUserAllowedToPublishToMainNamespace()) {
-		this.displayCannotPublishError();
-	}
-};
-
-/**
- * Display the error when user cannot publish into main namespace.
- */
-mw.cx.init.Translation.prototype.displayCannotPublishError = function () {
-	this.translationView.showViewIssuesMessage(
-		mw.msg('cx-infobar-cannot-publish'), 'cannot-publish', 'error'
+	const userPermissionChecker = new mw.cx.UserPermissionChecker(
+		this.veTarget,
+		this.translationView,
+		this.translationModel
 	);
-
-	// User isn't allowed to publish, display the information in the issue card.
-	this.translationModel.resolveIssueByName('cannot-publish');
-	this.translationModel.addUnattachedIssues([
-		new mw.cx.dm.TranslationIssue(
-			'cannot-publish', // Issue name
-			mw.message('cx-tools-linter-cannot-publish-message'), // message body
-			{
-				title: mw.msg('cx-tools-linter-cannot-publish-title'),
-				type: 'error',
-				help: 'https://en.wikipedia.org/wiki/Wikipedia:Content_translation_tool',
-				resolvable: true,
-				actionIcon: 'article',
-				actionLabel: mw.msg('cx-tools-linter-cannot-publish-action-label'),
-				action: this.switchToUserNamespace.bind(this)
-			}
-		)
-	]);
+	userPermissionChecker.checkIfUserCanPublish();
 };
 
-mw.cx.init.Translation.prototype.switchToUserNamespace = function () {
-	const popup = new OO.ui.PopupWidget({
-		$content: $('<p>').text(mw.msg('cx-publish-destination-namespace-changed')),
-		padded: true,
-		autoClose: true
-	});
-
-	this.veTarget.publishToolbar
-		.getToolGroupByName('publish')
-		.findItemFromData('publishSettings')
-		.$element.append(popup.$element);
-	popup.toggle(true);
-
-	this.translationModel.resolveIssueByName('cannot-publish');
-	this.translationView.clearMessages();
-	this.veTarget.onPublishNamespaceChange(this.userNamespaceId);
-};
-
-mw.cx.init.Translation.prototype.onNamespaceChange = function (namespaceId) {
+mw.cx.init.Translation.prototype.onNamespaceChange = function ( namespaceId ) {
 	this.checkIfUserCanPublish();
 
-	if (this.mainNamespaceId !== namespaceId) {
-		this.translationModel.resolveIssueByName('cannot-publish');
-		this.translationView.removeMessage('cannot-publish');
+	if ( this.mainNamespaceId !== namespaceId ) {
+		this.translationModel.resolveIssueByName( 'cannot-publish' );
+		this.translationView.removeMessage( 'cannot-publish' );
 	}
 };

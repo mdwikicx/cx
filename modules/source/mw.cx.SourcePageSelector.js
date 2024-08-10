@@ -5,12 +5,12 @@
  * @class
  * @param {OO.ui.ButtonWidget} triggerButton
  * @param {Object} options
- * @cfg {mw.cx.SiteMapper} siteMapper
- * @cfg {jQuery} $container Container for source page selector
- * @cfg {string} sourceLanguage Source language
- * @cfg {string} targetLanguage Target language
- * @cfg {string} sourceTitle Source title
- * @cfg {string} targetTitle Target title
+ * @param {mw.cx.SiteMapper} options.siteMapper
+ * @param {jQuery} options.$container Container for source page selector
+ * @param {string} options.sourceLanguage Source language
+ * @param {string} options.targetLanguage Target language
+ * @param {string} options.sourceTitle Source title
+ * @param {string} options.targetTitle Target title
  */
 mw.cx.SourcePageSelector = function ( triggerButton, options ) {
 	this.options = options || {};
@@ -72,7 +72,6 @@ mw.cx.SourcePageSelector.prototype.prefill = function () {
  * Listen for events.
  */
 mw.cx.SourcePageSelector.prototype.listen = function () {
-	var proxied;
 	// Open or close the dialog when clicking the trigger link.
 	// The dialog will be uninitialized until the first click.
 	this.triggerButton.connect( this, {
@@ -108,7 +107,7 @@ mw.cx.SourcePageSelector.prototype.listen = function () {
 		this.discardDialog();
 	}.bind( this ) );
 
-	proxied = this.pageSelector.lookupMenu.onDocumentKeyDownHandler;
+	const proxied = this.pageSelector.lookupMenu.onDocumentKeyDownHandler;
 	this.pageSelector.lookupMenu.onDocumentKeyDownHandler = function ( e ) {
 		if ( e.keyCode === OO.ui.Keys.TAB || e.keyCode === OO.ui.Keys.ESCAPE ) {
 			return;
@@ -159,7 +158,7 @@ mw.cx.SourcePageSelector.prototype.onDocumentMouseUp = function ( e ) {
  * Updates the message displayed when there are no search results
  */
 mw.cx.SourcePageSelector.prototype.updateNoResultsMessage = function () {
-	var message = mw.msg( 'cx-source-page-selector-no-search-results',
+	const message = mw.msg( 'cx-source-page-selector-no-search-results',
 		this.pageSelector.getQueryValue(),
 		$.uls.data.getAutonym( this.languageFilter.getSourceLanguage() )
 	);
@@ -218,18 +217,16 @@ mw.cx.SourcePageSelector.prototype.discardDialog = function () {
 };
 
 mw.cx.SourcePageSelector.prototype.render = function () {
-	var $searchResults, $noSuggestionsMessage;
-
 	this.$container.hide(); // Starts as hidden, shown on this.triggerButton click
 
-	$noSuggestionsMessage = $( '<div>' )
+	const $noSuggestionsMessage = $( '<div>' )
 		.addClass( 'cx-source-page-selector__no-suggestions-message' )
 		.text( mw.msg( 'cx-source-page-selector-no-suggestions' ) );
 
 	this.$noResultsMessage = $( '<div>' )
 		.addClass( 'cx-source-page-selector__search-message' );
 
-	$searchResults = $( '<div>' )
+	const $searchResults = $( '<div>' )
 		.addClass( 'cx-source-page-selector__search-results' )
 		.append( $noSuggestionsMessage, this.$noResultsMessage );
 
@@ -279,7 +276,7 @@ mw.cx.SourcePageSelector.prototype.render = function () {
  * @return {jQuery.Promise}
  */
 mw.cx.SourcePageSelector.prototype.getExcludedSourceNamespaces = function ( sourceLanguage ) {
-	var excludedNamespacesConfig = Object.keys(
+	const excludedNamespacesConfig = Object.keys(
 		mw.config.get( 'wgContentTranslationExcludedNamespaces' ) || {}
 	);
 
@@ -288,12 +285,12 @@ mw.cx.SourcePageSelector.prototype.getExcludedSourceNamespaces = function ( sour
 		meta: 'siteinfo',
 		siprop: 'namespaces'
 	} ).then( function ( response ) {
-		var isTalkPage, namespaceId, namespaceObj, excludedNamespaces = [];
+		const excludedNamespaces = [];
 
-		for ( namespaceId in response.query.namespaces ) {
-			namespaceObj = response.query.namespaces[ namespaceId ];
+		for ( const namespaceId in response.query.namespaces ) {
+			const namespaceObj = response.query.namespaces[ namespaceId ];
 			// Odd namespace ids are talk pages
-			isTalkPage = ( namespaceId > 0 && namespaceId % 2 === 1 );
+			const isTalkPage = ( namespaceId > 0 && namespaceId % 2 === 1 );
 			if ( isTalkPage ||
 				excludedNamespacesConfig.indexOf( namespaceObj.canonical ) >= 0
 			) {

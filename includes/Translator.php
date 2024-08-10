@@ -4,7 +4,7 @@ namespace ContentTranslation;
 
 use ContentTranslation\Service\UserService;
 use MediaWiki\MediaWikiServices;
-use User;
+use MediaWiki\User\User;
 
 class Translator {
 
@@ -26,21 +26,23 @@ class Translator {
 	}
 
 	public function addTranslation( $translationId ) {
+		/** @var LoadBalancer $lb */
 		$lb = MediaWikiServices::getInstance()->getService( 'ContentTranslation.LoadBalancer' );
 		$dbw = $lb->getConnection( DB_PRIMARY );
-		$dbw->replace(
-			'cx_translators',
-			[ [ 'translator_user_id', 'translator_translation_id' ] ],
-			[
+		$dbw->newReplaceQueryBuilder()
+			->replaceInto( 'cx_translators' )
+			->uniqueIndexFields( [ 'translator_user_id', 'translator_translation_id' ] )
+			->row( [
 				'translator_user_id' => $this->getGlobalUserId(),
 				'translator_translation_id' => $translationId,
-			],
-			__METHOD__
-		);
+			] )
+			->caller( __METHOD__ )
+			->execute();
 	}
 
 	public function getLanguages( $type ) {
 		// Note: there is no index on translation_last_updated_timestamp
+		/** @var LoadBalancer $lb */
 		$lb = MediaWikiServices::getInstance()->getService( 'ContentTranslation.LoadBalancer' );
 		$dbr = $lb->getConnection( DB_REPLICA );
 
@@ -76,20 +78,21 @@ class Translator {
 	 * @return int
 	 */
 	public function getTranslationsCount() {
+		/** @var LoadBalancer $lb */
 		$lb = MediaWikiServices::getInstance()->getService( 'ContentTranslation.LoadBalancer' );
 		$dbr = $lb->getConnection( DB_REPLICA );
 
-		$count = $dbr->selectField(
-			[ 'cx_translators', 'cx_translations' ],
-			'count(*)',
-			[
+		$count = $dbr->newSelectQueryBuilder()
+			->select( 'COUNT(*)' )
+			->from( 'cx_translators' )
+			->join( 'cx_translations', null, 'translator_translation_id = translation_id' )
+			->where( [
 				'translator_user_id' => $this->getGlobalUserId(),
-				'translator_translation_id = translation_id',
 				// And it is published
 				Translation::getPublishedCondition( $dbr )
-			],
-			__METHOD__
-		);
+			] )
+			->caller( __METHOD__ )
+			->fetchField();
 
 		return intval( $count );
 	}
@@ -117,20 +120,20 @@ class Translator {
 			'target' => 'translation_target_language',
 		];
 
+		/** @var LoadBalancer $lb */
 		$lb = MediaWikiServices::getInstance()->getService( 'ContentTranslation.LoadBalancer' );
 		$dbr = $lb->getConnection( DB_REPLICA );
 
-		$table = 'cx_translations';
-		$fields = [
-			'language' => $directionField[$direction],
-			'translators' => 'COUNT(DISTINCT translation_started_by)',
-		];
-		$conds = Translation::getPublishedCondition( $dbr );
-		$options = [
-			'GROUP BY' => $directionField[$direction],
-		];
-
-		$rows = $dbr->select( $table, $fields, $conds, __METHOD__, $options );
+		$rows = $dbr->newSelectQueryBuilder()
+			->select( [
+				'language' => $directionField[$direction],
+				'translators' => 'COUNT(DISTINCT translation_started_by)',
+			] )
+			->from( 'cx_translations' )
+			->where( Translation::getPublishedCondition( $dbr ) )
+			->groupBy( $directionField[$direction] )
+			->caller( __METHOD__ )
+			->fetchResultSet();
 
 		$result = [];
 
@@ -146,13 +149,15 @@ class Translator {
 	 * @return int Number of translators
 	 */
 	public static function getTotalTranslatorsCount() {
+		/** @var LoadBalancer $lb */
 		$lb = MediaWikiServices::getInstance()->getService( 'ContentTranslation.LoadBalancer' );
 		$dbr = $lb->getConnection( DB_REPLICA );
 
-		$table = 'cx_translations';
-		$field = 'COUNT(DISTINCT translation_started_by)';
-		$conds = Translation::getPublishedCondition( $dbr );
-
-		return $dbr->selectField( $table, $field, $conds, __METHOD__ );
+		return $dbr->newSelectQueryBuilder()
+			->select( 'COUNT(DISTINCT translation_started_by)' )
+			->from( 'cx_translations' )
+			->where( Translation::getPublishedCondition( $dbr ) )
+			->caller( __METHOD__ )
+			->fetchField();
 	}
 }

@@ -5,10 +5,9 @@ namespace ContentTranslation\Tests;
 
 use ContentTranslation\AbuseFilterChecker;
 use Generator;
-use MediaWiki\Extension\AbuseFilter\AbuseFilterServices;
 use MediaWiki\Title\Title;
+use MediaWiki\User\User;
 use MediaWikiIntegrationTestCase;
-use User;
 
 /**
  * @covers \ContentTranslation\AbuseFilterChecker
@@ -50,7 +49,7 @@ class AbuseFilterCheckerTest extends MediaWikiIntegrationTestCase {
 		$row = [
 			'af_id' => self::TEST_FILTER,
 			'af_pattern' => $rule,
-			'af_timestamp' => $this->db->timestamp(),
+			'af_timestamp' => $this->getDb()->timestamp(),
 			'af_enabled' => 1,
 			'af_comments' => '',
 			'af_public_comments' => 'Mock filter',
@@ -60,13 +59,14 @@ class AbuseFilterCheckerTest extends MediaWikiIntegrationTestCase {
 			'af_deleted' => 0,
 			'af_actions' => implode( ',', array_keys( $actions ) ),
 			'af_group' => 'default',
+			'af_actor' => $this->getServiceContainer()->getActorNormalization()
+				->acquireActorId( $this->getTestUser()->getUserIdentity(), $this->db ),
 		];
-		$row += AbuseFilterServices::getActorMigration()->getInsertValues(
-			$this->db,
-			'af_user',
-			$this->getTestUser()->getUserIdentity()
-		);
-		$this->db->insert( 'abuse_filter', $row, __METHOD__ );
+		$this->getDb()->newInsertQueryBuilder()
+			->insertInto( 'abuse_filter' )
+			->row( $row )
+			->caller( __METHOD__ )
+			->execute();
 		$actionsRows = [];
 		foreach ( $actions as $name => $params ) {
 			$actionsRows[] = [
@@ -75,7 +75,13 @@ class AbuseFilterCheckerTest extends MediaWikiIntegrationTestCase {
 				'afa_parameters' => implode( "\n", $params )
 			];
 		}
-		$this->db->insert( 'abuse_filter_action', $actionsRows, __METHOD__ );
+		if ( $actionsRows ) {
+			$this->getDb()->newInsertQueryBuilder()
+				->insertInto( 'abuse_filter_action' )
+				->rows( $actionsRows )
+				->caller( __METHOD__ )
+				->execute();
+		}
 	}
 
 	/**

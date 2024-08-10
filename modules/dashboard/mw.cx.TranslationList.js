@@ -12,7 +12,7 @@
  * @class
  * @constructor
  * @extends mw.cx.DashboardList
- * @mixins OO.EventEmitter
+ * @mixes OO.EventEmitter
  *
  * @param {jQuery} $container
  * @param {mw.cx.SiteMapper} siteMapper
@@ -51,8 +51,7 @@ OO.mixinClass( mw.cx.CXTranslationList, OO.EventEmitter );
  * @return {jQuery.Promise}
  */
 mw.cx.CXTranslationList.prototype.getTranslations = function () {
-	var self = this,
-		params,
+	const self = this,
 		api = new mw.Api();
 
 	if ( this.promise ) {
@@ -64,7 +63,7 @@ mw.cx.CXTranslationList.prototype.getTranslations = function () {
 		return $.Deferred().resolve( [] );
 	}
 
-	params = $.extend( {
+	const params = $.extend( {
 		assert: 'user',
 		list: 'contenttranslation',
 		type: this.type,
@@ -113,7 +112,7 @@ mw.cx.CXTranslationList.prototype.init = function () {
 };
 
 mw.cx.CXTranslationList.prototype.loadItems = function () {
-	var promise, self = this;
+	const self = this;
 
 	if ( this.promise ) {
 		return this.promise;
@@ -128,7 +127,7 @@ mw.cx.CXTranslationList.prototype.loadItems = function () {
 	this.$loadingIndicatorSpinner.show();
 	this.pendingRequests++;
 
-	promise = this.getTranslations();
+	const promise = this.getTranslations();
 	promise.done( function ( translations ) {
 		self.translations = self.translations.concat( translations );
 
@@ -169,7 +168,6 @@ mw.cx.CXTranslationList.prototype.loadItems = function () {
  * Fill source and target language filter with languages for which there are translationlist items
  */
 mw.cx.CXTranslationList.prototype.fillULS = function () {
-	var languageDecorator;
 	// Check if there is only one language combination, e.g. English to Spanish
 	// sourceLanguages - [ 'en' ]
 	// targetLanguages - [ 'es' ]
@@ -182,7 +180,7 @@ mw.cx.CXTranslationList.prototype.fillULS = function () {
 	this.sourceLanguages.unshift( 'x-all' );
 	this.targetLanguages.unshift( 'x-all' );
 
-	languageDecorator = function ( $language, languageCode ) {
+	const languageDecorator = function ( $language, languageCode ) {
 		if ( languageCode === 'x-all' ) {
 			$language.parent().addClass( 'cx-translationlist-uls-all-languages' );
 		}
@@ -247,44 +245,37 @@ mw.cx.CXTranslationList.prototype.continueTranslation = function ( translation )
  * @param {Object[]} translations
  */
 mw.cx.CXTranslationList.prototype.renderTranslations = function ( translations ) {
-	var i, translation, progress, $translation,
-		$lastUpdated, $image, $progressbar,
-		sourceDir, targetDir, $targetTitle,
-		$translationLink,
-		$sourceLanguage, $targetLanguage, $languageContainer,
-		deleteTranslation, $actions,
-		continueTranslation,
-		$titleLanguageBlock,
-		$translations = [];
+	const $translations = [];
 
-	for ( i = 0; i < translations.length; i++ ) {
-		translation = translations[ i ];
+	for ( let i = 0; i < translations.length; i++ ) {
+		const translation = translations[ i ];
 
+		let progress;
 		try {
 			progress = JSON.parse( translation.progress );
 		} catch ( e ) {
 			progress = {};
 		}
 
-		$translation = $( '<div>' )
+		const $translation = $( '<div>' )
 			.addClass( 'cx-tlitem' )
 			.data( 'translation', translation );
-		$lastUpdated = $( '<div>' )
+		const $lastUpdated = $( '<div>' )
 			.addClass( 'cx-last-updated' )
 			.text( moment.utc( translation.lastUpdateTimestamp, 'YYYYMMDDHHmmss' ).local().fromNow() );
-		$image = $( '<div>' )
+		const $image = $( '<div>' )
 			.addClass( 'cx-tlitem__image oo-ui-icon-article' );
-		$progressbar = $( '<div>' )
+		const $progressbar = $( '<div>' )
 			.addClass( 'progressbar' )
 			.cxProgressBar( {
 				weights: progress,
 				version: translation.cxVersion
 			} );
 
-		sourceDir = $.uls.data.getDir( translation.sourceLanguage );
-		targetDir = $.uls.data.getDir( translation.targetLanguage );
+		const sourceDir = $.uls.data.getDir( translation.sourceLanguage );
+		const targetDir = $.uls.data.getDir( translation.targetLanguage );
 
-		$translationLink = $( '<a>' )
+		const $translationLink = $( '<a>' )
 			.addClass( 'cx-translation-link' )
 			// It must be a separate element to ensure
 			// separation from the target title
@@ -300,7 +291,7 @@ mw.cx.CXTranslationList.prototype.renderTranslations = function ( translations )
 		// If the translated title is different from the source title,
 		// show it near the source title
 		if ( translation.sourceTitle !== translation.targetTitle ) {
-			$targetTitle = $( '<span>' )
+			const $targetTitle = $( '<span>' )
 				.prop( {
 					lang: translation.targetLanguage,
 					dir: targetDir
@@ -313,7 +304,7 @@ mw.cx.CXTranslationList.prototype.renderTranslations = function ( translations )
 			);
 		}
 
-		$sourceLanguage = $( '<div>' )
+		const $sourceLanguage = $( '<div>' )
 			.prop( {
 				lang: translation.sourceLanguage,
 				dir: sourceDir
@@ -321,7 +312,7 @@ mw.cx.CXTranslationList.prototype.renderTranslations = function ( translations )
 			.addClass( 'cx-tlitem__languages__language cx-tlitem__languages__language--source' )
 			.text( $.uls.data.getAutonym( translation.sourceLanguage ) );
 
-		$targetLanguage = $( '<div>' )
+		const $targetLanguage = $( '<div>' )
 			.prop( {
 				lang: translation.targetLanguage,
 				dir: targetDir
@@ -329,15 +320,15 @@ mw.cx.CXTranslationList.prototype.renderTranslations = function ( translations )
 			.addClass( 'cx-tlitem__languages__language cx-tlitem__languages__language--target' )
 			.text( $.uls.data.getAutonym( translation.targetLanguage ) );
 
-		$languageContainer = $( '<div>' )
+		const $languageContainer = $( '<div>' )
 			.addClass( 'cx-tlitem__languages' )
 			.append( $sourceLanguage, $targetLanguage );
 
-		$actions = $( '<div>' )
+		const $actions = $( '<div>' )
 			.addClass( 'cx-tlitem__actions' );
 		// If the translation is draft, allow deleting it
 		if ( translation.status === 'draft' ) {
-			deleteTranslation = new OO.ui.ButtonWidget( {
+			const deleteTranslation = new OO.ui.ButtonWidget( {
 				framed: false,
 				classes: [ 'cx-discard-translation' ],
 				icon: 'trash',
@@ -345,7 +336,7 @@ mw.cx.CXTranslationList.prototype.renderTranslations = function ( translations )
 			} );
 			$actions.append( deleteTranslation.$element );
 		} else if ( translation.status === 'published' ) {
-			continueTranslation = new OO.ui.ButtonWidget( {
+			const continueTranslation = new OO.ui.ButtonWidget( {
 				framed: false,
 				classes: [ 'cx-continue-translation' ],
 				icon: 'edit',
@@ -354,7 +345,7 @@ mw.cx.CXTranslationList.prototype.renderTranslations = function ( translations )
 			$actions.append( continueTranslation.$element );
 		}
 
-		$titleLanguageBlock = $( '<div>' )
+		const $titleLanguageBlock = $( '<div>' )
 			.addClass( 'cx-tlitem__details' )
 			.append( $translationLink, $progressbar, $lastUpdated, $languageContainer );
 
@@ -376,17 +367,15 @@ mw.cx.CXTranslationList.prototype.renderTranslations = function ( translations )
 };
 
 mw.cx.CXTranslationList.prototype.buildEmptyTranslationList = function () {
-	var $img, $title, $desc;
-
 	if ( this.$emptyTranslationsList ) {
 		return this.$emptyTranslationsList;
 	}
-	$img = $( '<div>' )
+	const $img = $( '<div>' )
 		.addClass( 'cx-translationlist-empty__img' );
-	$title = $( '<div>' )
+	const $title = $( '<div>' )
 		.addClass( 'cx-translationlist-empty__title' )
 		.text( mw.msg( 'cx-translationlist-empty-title' ) );
-	$desc = $( '<div>' )
+	const $desc = $( '<div>' )
 		.addClass( 'cx-translationlist-empty__desc' )
 		.text( mw.msg( 'cx-translationlist-empty-desc' ) );
 	return $( '<div>' )
@@ -397,17 +386,15 @@ mw.cx.CXTranslationList.prototype.buildEmptyTranslationList = function () {
 };
 
 mw.cx.CXTranslationList.prototype.listen = function () {
-	var self = this;
+	const self = this;
 
 	// Parent method
 	mw.cx.CXTranslationList.super.prototype.listen.apply( this, arguments );
 
 	this.$listContainer.on( 'click', '.cx-discard-translation', function ( e ) {
-		var translation;
-
 		e.stopPropagation();
 		$( this ).find( 'a' ).trigger( 'blur' );
-		translation = $( this ).closest( '.cx-tlitem' ).data( 'translation' );
+		const translation = $( this ).closest( '.cx-tlitem' ).data( 'translation' );
 
 		OO.ui.getWindowManager().openWindow( 'message', $.extend( {
 			message: mw.msg( 'cx-draft-discard-confirmation-message' ),
@@ -439,17 +426,15 @@ mw.cx.CXTranslationList.prototype.listen = function () {
 	} );
 
 	this.$listContainer.on( 'click', '.cx-continue-translation', function ( e ) {
-		var translation;
-
 		e.stopPropagation();
 		$( this ).find( 'a' ).trigger( 'blur' );
-		translation = $( this ).closest( '.cx-tlitem' ).data( 'translation' );
+		const translation = $( this ).closest( '.cx-tlitem' ).data( 'translation' );
 		self.continueTranslation( translation );
 		return false;
 	} );
 
 	this.$listContainer.on( 'click', '.cx-tlitem', function () {
-		var translation = $( this ).data( 'translation' );
+		const translation = $( this ).data( 'translation' );
 		if ( translation.status === 'published' ) {
 			location.href = translation.targetURL;
 		} else {
@@ -459,7 +444,7 @@ mw.cx.CXTranslationList.prototype.listen = function () {
 };
 
 mw.cx.CXTranslationList.prototype.onScroll = function () {
-	var scrollTop = window.pageYOffset,
+	const scrollTop = window.pageYOffset,
 		windowHeight = document.documentElement.clientHeight;
 
 	// Load next batch of items on scroll.
@@ -495,7 +480,7 @@ mw.cx.CXTranslationList.prototype.markTranslationAsDeleted = function ( translat
  * @return {jQuery.Promise}
  */
 mw.cx.CXTranslationList.prototype.discardTranslation = function ( translation ) {
-	var apiParams = {
+	const apiParams = {
 		assert: 'user',
 		action: 'cxdelete',
 		from: translation.sourceLanguage,
@@ -507,14 +492,13 @@ mw.cx.CXTranslationList.prototype.discardTranslation = function ( translation ) 
 };
 
 mw.cx.CXTranslationList.prototype.applyFilters = function () {
-	var i, translation, visible,
-		sourceLanguage = this.languageFilter.getSourceLanguage(),
+	const sourceLanguage = this.languageFilter.getSourceLanguage(),
 		targetLanguage = this.languageFilter.getTargetLanguage();
 
-	for ( i = 0; i < this.translations.length; i++ ) {
-		translation = this.translations[ i ];
+	for ( let i = 0; i < this.translations.length; i++ ) {
+		const translation = this.translations[ i ];
 
-		visible = ( !sourceLanguage || translation.sourceLanguage === sourceLanguage ) &&
+		const visible = ( !sourceLanguage || translation.sourceLanguage === sourceLanguage ) &&
 			( !targetLanguage || translation.targetLanguage === targetLanguage );
 
 		if ( visible ) {

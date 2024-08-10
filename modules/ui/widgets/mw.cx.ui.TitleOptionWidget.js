@@ -17,12 +17,10 @@
 	 *
 	 * @constructor
 	 * @param {Object} [config] Configuration options
-	 * @cfg {number} [numOfLanguages] Number of languages matched article exists in.
-	 * @cfg {boolean} [missingInTargetLanguage] Article is missing in target language
+	 * @param {number} [config.numOfLanguages] Number of languages matched article exists in.
+	 * @param {boolean} [config.missingInTargetLanguage] Article is missing in target language
 	 */
 	mw.cx.ui.TitleOptionWidget = function MwCxTitleOptionWidget( config ) {
-		var languageIcon, languageLabel;
-
 		// Parent constructor
 		mw.cx.ui.TitleOptionWidget.super.call( this, config );
 
@@ -50,11 +48,11 @@
 		if ( config.numOfLanguages ) {
 			this.numOfLanguages = config.numOfLanguages;
 
-			languageIcon = new OO.ui.IconWidget( {
+			const languageIcon = new OO.ui.IconWidget( {
 				icon: 'language',
 				title: mw.msg( 'cx-page-number-of-languages' )
 			} );
-			languageLabel = new OO.ui.LabelWidget( {
+			const languageLabel = new OO.ui.LabelWidget( {
 				label: mw.language.convertNumber( config.numOfLanguages )
 			} );
 			this.$element.append(

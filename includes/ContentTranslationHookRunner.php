@@ -1,21 +1,15 @@
 <?php
+declare( strict_types = 1 );
 
 namespace ContentTranslation;
 
 use MediaWiki\HookContainer\HookContainer;
 use MediaWiki\Title\Title;
-use User;
+use MediaWiki\User\User;
 
 class ContentTranslationHookRunner implements SectionTranslationBeforePublishHook {
+	private HookContainer $hookContainer;
 
-	public const SERVICE_NAME = 'ContentTranslationHookRunner';
-
-	/** @var HookContainer */
-	private $hookContainer;
-
-	/**
-	 * @param HookContainer $hookContainer
-	 */
 	public function __construct( HookContainer $hookContainer ) {
 		$this->hookContainer = $hookContainer;
 	}

@@ -5,7 +5,7 @@
 ( function () {
 	'use strict';
 
-	var CAMPAIGN = 'interlanguagelink';
+	const CAMPAIGN = 'interlanguagelink';
 
 	/**
 	 * Start a new page translation in Special:CX.
@@ -13,7 +13,7 @@
 	 * @param {string} targetLanguage
 	 */
 	function startPageInCX( targetLanguage ) {
-		var sourceLanguage = mw.cx.siteMapper.getCurrentWikiLanguageCode(),
+		const sourceLanguage = mw.cx.siteMapper.getCurrentWikiLanguageCode(),
 			sourceTitle = mw.config.get( 'wgTitle' );
 
 		mw.cx.siteMapper.setCXToken( sourceLanguage, targetLanguage, sourceTitle );
@@ -33,14 +33,12 @@
 	 * @return {jQuery}
 	 */
 	function getDialogContent( targetLanguage ) {
-		var settingsButton, descriptionLabel, actionTranslate, $license, actions;
-
-		descriptionLabel = new OO.ui.LabelWidget( {
+		const descriptionLabel = new OO.ui.LabelWidget( {
 			classes: [ 'cx-entrypoint-dialog__desc' ],
 			label: mw.msg( 'cx-entrypoint-dialog-desc' )
 		} );
 
-		actionTranslate = new OO.ui.ButtonWidget( {
+		const actionTranslate = new OO.ui.ButtonWidget( {
 			label: mw.msg(
 				'cx-entrypoint-dialog-button-translate-from',
 				$.uls.data.getAutonym( mw.config.get( 'wgContentLanguage' ) )
@@ -52,17 +50,17 @@
 			startPageInCX( targetLanguage );
 		} );
 
-		$license = $( '<div>' )
+		const $license = $( '<div>' )
 			.addClass( 'cx-entrypoint-dialog__license' )
 			.append( mw.message( 'cx-license-agreement' ).parseDom() );
 
-		actions = new OO.ui.HorizontalLayout( {
+		const actions = new OO.ui.HorizontalLayout( {
 			classes: [ 'cx-entrypoint-dialog__actions' ],
 			items: [ actionTranslate ]
 		} );
 
 		if ( !mw.config.get( 'wgContentTranslationAsBetaFeature' ) ) {
-			settingsButton = new OO.ui.ButtonWidget( {
+			const settingsButton = new OO.ui.ButtonWidget( {
 				classes: [ 'cx-entrypoint-dialog__settings' ],
 				icon: 'settings',
 				framed: false,
@@ -75,9 +73,9 @@
 	}
 
 	function createCXInterlanguageItem( code ) {
-		var $languageLink, popup, autonym = $.uls.data.getAutonym( code );
+		const autonym = $.uls.data.getAutonym( code );
 
-		$languageLink = $( '<a>' )
+		const $languageLink = $( '<a>' )
 			.addClass( 'new' )
 			.prop( {
 				title: mw.msg( 'cx-entrypoint-title', autonym ),
@@ -90,7 +88,7 @@
 			} )
 			.text( autonym );
 
-		popup = new OO.ui.PopupWidget( {
+		const popup = new OO.ui.PopupWidget( {
 			label: mw.msg( 'cx-entrypoint-dialog-page-doesnt-exist-yet', autonym ),
 			classes: [ 'cx-entrypoint-dialog' ],
 			$content: getDialogContent( code ),
@@ -110,15 +108,14 @@
 		// position calculations and reset later. Also, check if that height is enough,
 		// since our gray interlanguage link is in absolutely positioned side panel.
 		popup.computePosition = function () {
-			var oldPositionObj,
-				$html = $( 'html' ),
+			const $html = $( 'html' ),
 				panelHeight = $( '#mw-panel' ).outerHeight();
 
 			$html.css( 'height', 'auto' );
 			if ( $html.outerHeight() < panelHeight ) {
 				$html.css( 'height', panelHeight );
 			}
-			oldPositionObj = OO.ui.PopupWidget.prototype.computePosition.call( popup );
+			const oldPositionObj = OO.ui.PopupWidget.prototype.computePosition.call( popup );
 			$html.css( 'height', '' );
 
 			return oldPositionObj;

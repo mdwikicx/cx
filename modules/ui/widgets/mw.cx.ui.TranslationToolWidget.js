@@ -8,7 +8,7 @@
  * @constructor
  * @param {mw.cx.tools.TranslationTool} translationTool
  * @param {Object} config Configuration options
- * @cfg {string} title The tool title
+ * @param {string} config.title The tool title
  */
 mw.cx.widgets.TranslationToolWidget = function CXTranslationToolWidget( translationTool, config ) {
 	this.translationTool = translationTool;
@@ -108,13 +108,11 @@ mw.cx.widgets.TranslationToolWidget.prototype.setContent = function ( content ) 
  * @param {OO.ui.Element[]} actions Array of action widgets
  */
 mw.cx.widgets.TranslationToolWidget.prototype.setActions = function ( actions ) {
-	var i;
-
 	this.$actions.empty();
 	if ( !actions || actions.length === 0 ) {
 		this.$actions.hide();
 	} else {
-		for ( i = 0; i < actions.length; i++ ) {
+		for ( let i = 0; i < actions.length; i++ ) {
 			this.$actions.append( actions[ i ].$element );
 		}
 	}

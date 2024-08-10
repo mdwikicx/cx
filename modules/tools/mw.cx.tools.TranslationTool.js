@@ -6,9 +6,9 @@
  * @constructor
  * @param {mw.cx.dm.TranslationUnit} model
  * @param {Object} config
- * @cfg {string} title The title to be displayed for the tool card. If missing, header wont be displayed
- * @cfg {string} language The language name to be displayed in header of tool card
- * @cfg {number} order The position of the card in tools column. Cards will be arranged in this order.
+ * @param {string} config.title The title to be displayed for the tool card. If missing, header wont be displayed
+ * @param {string} config.language The language name to be displayed in header of tool card
+ * @param {number} config.order The position of the card in tools column. Cards will be arranged in this order.
  */
 mw.cx.tools.TranslationTool = function CXTranslationTool( model, config ) {
 	// Mixin constructor
@@ -102,14 +102,14 @@ mw.cx.tools.TranslationTool.prototype.getData = function () {
  * Refresh the card rendering.
  */
 mw.cx.tools.TranslationTool.prototype.refresh = function () {
-	var card = this.getCard();
+	const card = this.getCard();
 	if ( card ) {
 		card.render();
 	}
 };
 
 mw.cx.tools.TranslationTool.prototype.destroy = function () {
-	var card = this.getCard();
+	const card = this.getCard();
 	if ( card ) {
 		// Remove will not work, until this is attached to DOM
 		card.$element.remove();

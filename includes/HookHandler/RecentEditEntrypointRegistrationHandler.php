@@ -8,9 +8,10 @@ use ContentTranslation\Service\WikidataIdFetcher;
 use ContentTranslation\SiteMapper;
 use ContentTranslation\Store\RecentSignificantEditStore;
 use ExtensionRegistry;
-use MediaWiki\Hook\BeforePageDisplayHook;
 use MediaWiki\MediaWikiServices;
-use OutputPage;
+use MediaWiki\Output\Hook\BeforePageDisplayHook;
+use MediaWiki\Output\OutputPage;
+use MobileContext;
 use Skin;
 
 class RecentEditEntrypointRegistrationHandler implements BeforePageDisplayHook {
@@ -50,6 +51,7 @@ class RecentEditEntrypointRegistrationHandler implements BeforePageDisplayHook {
 	public function onBeforePageDisplay( $out, $skin ): void {
 		$isMobileView = false;
 		if ( ExtensionRegistry::getInstance()->isLoaded( 'MobileFrontend' ) ) {
+			/** @var MobileContext $mobileContext */
 			$mobileContext = MediaWikiServices::getInstance()->getService( 'MobileFrontend.Context' );
 			$isMobileView = $mobileContext->shouldDisplayMobileView();
 		}

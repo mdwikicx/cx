@@ -14,12 +14,12 @@ $.uls.data.addLanguage( 'x-all', {
  * @class
  * @extends OO.ui.Widget
  * @param {Object} [config] Configuration object
- * @cfg {boolean} [canBeSame=false] True if source and target language can be the same language
- * @cfg {boolean} [canBeUndefined=false] True if source or target language can be unset
- * @cfg {boolean} [updateLocalStorage=false] True if this language selector can update local storage,
+ * @param {boolean} [config.canBeSame=false] True if source and target language can be the same language
+ * @param {boolean} [config.canBeUndefined=false] True if source or target language can be unset
+ * @param {boolean} [config.updateLocalStorage=false] True if this language selector can update local storage,
  * when source or target language changes
- * @cfg {Function} [onSourceLanguageChange] Callback invoked when source language changes
- * @cfg {Function} [onTargetLanguageChange] Callback invoked when target language changes
+ * @param {Function} [config.onSourceLanguageChange] Callback invoked when source language changes
+ * @param {Function} [config.onTargetLanguageChange] Callback invoked when target language changes
  */
 mw.cx.ui.LanguageFilter = function ( config ) {
 	// Configuration initialization
@@ -61,7 +61,7 @@ mw.cx.ui.LanguageFilter.static.targetLanguages = null;
 /* Methods */
 
 mw.cx.ui.LanguageFilter.prototype.init = function () {
-	var sourceLanguage = mw.storage.get( 'cxSourceLanguage' ),
+	const sourceLanguage = mw.storage.get( 'cxSourceLanguage' ),
 		targetLanguage = mw.storage.get( 'cxTargetLanguage' );
 
 	this.isNarrowScreenSize = document.documentElement.clientWidth < this.narrowLimit;
@@ -100,7 +100,7 @@ mw.cx.ui.LanguageFilter.prototype.getAutonyms = function ( languages ) {
  * and use the appropriate size, not to go outside of viewport.
  */
 mw.cx.ui.LanguageFilter.prototype.calculateUlsPosition = function () {
-	var ulsTriggerLeft = this.$element.offset().left,
+	const ulsTriggerLeft = this.$element.offset().left,
 		triggerWidth = this.$element.outerWidth(),
 		menuWidth = this.$menu.width(),
 		isRtl = $( 'html' ).prop( 'dir' ) === 'rtl',
@@ -168,8 +168,6 @@ mw.cx.ui.LanguageFilter.prototype.getSourceLanguage = function () {
  * @param {string} language A language code
  */
 mw.cx.ui.LanguageFilter.prototype.setSourceLanguage = function ( language ) {
-	var currentSource, i, length, quickListLanguages, quickListLang;
-
 	if ( language === 'x-all' ) {
 		language = null;
 	}
@@ -183,15 +181,15 @@ mw.cx.ui.LanguageFilter.prototype.setSourceLanguage = function ( language ) {
 	// Instead, do what the user probably means: either swap them if
 	// it's valid, or pick the first of the common languages in ULS.
 	if ( !this.canBeSame && language === this.getTargetLanguage() ) {
-		currentSource = this.getSourceLanguage();
+		const currentSource = this.getSourceLanguage();
 
 		if ( this.isValidTarget( currentSource ) ) {
 			this.sourceLanguage = language;
 			this.setTargetLanguage( currentSource );
 		} else {
-			quickListLanguages = this.targetLanguageButton.$button.data( 'uls' ).options.quickList();
-			for ( i = 0, length = quickListLanguages.length; i < length; i++ ) {
-				quickListLang = quickListLanguages[ i ];
+			const quickListLanguages = this.targetLanguageButton.$button.data( 'uls' ).options.quickList();
+			for ( let i = 0, length = quickListLanguages.length; i < length; i++ ) {
+				const quickListLang = quickListLanguages[ i ];
 
 				if ( this.isValidTarget( quickListLang ) && quickListLang !== language ) {
 					this.setTargetLanguage( quickListLang );
@@ -245,8 +243,6 @@ mw.cx.ui.LanguageFilter.prototype.getTargetLanguage = function () {
  * @param {string} language A language code
  */
 mw.cx.ui.LanguageFilter.prototype.setTargetLanguage = function ( language ) {
-	var currentTarget, i, length, quickListLanguages, quickListLang;
-
 	if ( language === 'x-all' ) {
 		language = null;
 	}
@@ -259,7 +255,7 @@ mw.cx.ui.LanguageFilter.prototype.setTargetLanguage = function ( language ) {
 	// Instead, do what the user probably means: either swap them if
 	// it's valid, or pick the first valid language of the common languages in ULS.
 	if ( !this.canBeSame && language === this.getSourceLanguage() ) {
-		currentTarget = this.getTargetLanguage();
+		const currentTarget = this.getTargetLanguage();
 
 		if ( this.isValidSource( currentTarget ) ) {
 			this.targetLanguage = language;
@@ -273,9 +269,9 @@ mw.cx.ui.LanguageFilter.prototype.setTargetLanguage = function ( language ) {
 				return;
 			}
 
-			quickListLanguages = this.sourceLanguageButton.$button.data( 'uls' ).options.quickList();
-			for ( i = 0, length = quickListLanguages.length; i < length; i++ ) {
-				quickListLang = quickListLanguages[ i ];
+			const quickListLanguages = this.sourceLanguageButton.$button.data( 'uls' ).options.quickList();
+			for ( let i = 0, length = quickListLanguages.length; i < length; i++ ) {
+				const quickListLang = quickListLanguages[ i ];
 
 				if ( this.isValidSource( quickListLang ) && quickListLang !== language ) {
 					this.setSourceLanguage( quickListLang );
@@ -321,18 +317,16 @@ mw.cx.ui.LanguageFilter.prototype.setTargetLanguageNoChecks = function ( languag
  * @param {string} language
  */
 mw.cx.ui.LanguageFilter.prototype.setFilterLabel = function ( filterButton, language ) {
-	var langProps, label;
-
 	if ( this.canBeUndefined && !language ) {
 		filterButton.setLabel( mw.msg( 'cx-translation-filter-label-all-languages' ) );
 		return;
 	}
 
-	langProps = {
+	const langProps = {
 		lang: language,
 		dir: $.uls.data.getDir( language )
 	};
-	label = this.isNarrowScreenSize ?
+	const label = this.isNarrowScreenSize ?
 		mw.language.bcp47( language ) :
 		$.uls.data.getAutonym( language );
 
@@ -350,7 +344,7 @@ mw.cx.ui.LanguageFilter.prototype.setFilterLabel = function ( filterButton, lang
  * @param {Object} [ulsOptions] ULS options that are added to the ULS
  */
 mw.cx.ui.LanguageFilter.prototype.fillSourceLanguages = function ( sourceLanguages, replace, ulsOptions ) {
-	var self = this;
+	const self = this;
 
 	// Default to all valid source languages
 	if ( !sourceLanguages ) {
@@ -391,7 +385,7 @@ mw.cx.ui.LanguageFilter.prototype.fillSourceLanguages = function ( sourceLanguag
  * @param {Object} [ulsOptions] ULS options that are added to the ULS
  */
 mw.cx.ui.LanguageFilter.prototype.fillTargetLanguages = function ( targetLanguages, replace, ulsOptions ) {
-	var self = this;
+	const self = this;
 
 	// Default to all valid target languages
 	if ( !targetLanguages ) {
@@ -466,7 +460,7 @@ mw.cx.ui.LanguageFilter.prototype.listen = function () {
 };
 
 mw.cx.ui.LanguageFilter.prototype.resize = function () {
-	var isNarrowScreenSize = document.documentElement.clientWidth < this.narrowLimit;
+	const isNarrowScreenSize = document.documentElement.clientWidth < this.narrowLimit;
 
 	// Exit early if screen size stays above/under narrow screen size limit
 	if ( this.isNarrowScreenSize === isNarrowScreenSize ) {

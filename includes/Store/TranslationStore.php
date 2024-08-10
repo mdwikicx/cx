@@ -29,22 +29,22 @@ class TranslationStore {
 	public function unlinkTranslationFromTranslator( int $translationId ) {
 		$dbw = $this->lb->getConnection( DB_PRIMARY );
 
-		$dbw->delete(
-			self::TRANSLATOR_TABLE_NAME,
-			[ 'translator_translation_id' => $translationId ],
-			__METHOD__
-		);
+		$dbw->newDeleteQueryBuilder()
+			->deleteFrom( self::TRANSLATOR_TABLE_NAME )
+			->where( [ 'translator_translation_id' => $translationId ] )
+			->caller( __METHOD__ )
+			->execute();
 	}
 
 	public function deleteTranslation( int $translationId ) {
 		$dbw = $this->lb->getConnection( DB_PRIMARY );
 
-		$dbw->update(
-			self::TRANSLATION_TABLE_NAME,
-			[ 'translation_status' => self::TRANSLATION_STATUS_DELETED ],
-			[ 'translation_id' => $translationId ],
-			__METHOD__
-		);
+		$dbw->newUpdateQueryBuilder()
+			->update( self::TRANSLATION_TABLE_NAME )
+			->set( [ 'translation_status' => self::TRANSLATION_STATUS_DELETED ] )
+			->where( [ 'translation_id' => $translationId ] )
+			->caller( __METHOD__ )
+			->execute();
 	}
 
 	/**
@@ -159,21 +159,13 @@ class TranslationStore {
 	public function findByPublishedTitle( string $publishedTitle, string $targetLanguage ): ?Translation {
 		$dbr = $this->lb->getConnection( DB_REPLICA );
 
-		$isPublishedCondition = $dbr->makeList(
-			[
-				'translation_status' => self::TRANSLATION_STATUS_PUBLISHED,
-				'translation_target_url IS NOT NULL',
-			],
-			LIST_OR
-		);
-
 		$row = $dbr->newSelectQueryBuilder()
 			->select( ISQLPlatform::ALL_ROWS )
 			->from( self::TRANSLATION_TABLE_NAME )
 			->where( [
 				'translation_target_language' => $targetLanguage,
 				'translation_target_title' => $publishedTitle,
-				$isPublishedCondition
+				Translation::getPublishedCondition( $dbr ),
 			] )
 			->caller( __METHOD__ )
 			->fetchRow();
@@ -310,8 +302,7 @@ class TranslationStore {
 			$whereConditions['translation_target_language'] = $to;
 		}
 		if ( $offset !== null ) {
-			$ts = $dbr->addQuotes( $dbr->timestamp( $offset ) );
-			$whereConditions[] = "translation_last_updated_timestamp < $ts";
+			$whereConditions[] = $dbr->expr( 'translation_last_updated_timestamp', '<', $dbr->timestamp( $offset ) );
 		}
 
 		$resultSet = $dbr->newSelectQueryBuilder()

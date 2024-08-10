@@ -3,15 +3,13 @@
  *
  * @class
  * @extends mw.cx.ui.ArticleColumn
+ * @param {Object} [config] Configuration object
  * @param {mw.cx.SiteMapper} config.siteMapper
  * @param {string} config.language
  * @param {string} config.title
  * @param {string|null} config.sectionTitle
- * @param {Object} [config] Configuration object
  */
 mw.cx.ui.SourceColumn = function ( config ) {
-	var articleLink;
-
 	// Parent constructor
 	mw.cx.ui.SourceColumn.super.apply( this, arguments );
 
@@ -30,13 +28,13 @@ mw.cx.ui.SourceColumn = function ( config ) {
 		.setReadOnly( true )
 		.setValidation( null );
 
-	var linkHref = this.siteMapper.getPageUrl(
+	const linkHref = this.siteMapper.getPageUrl(
 		this.language,
 		config.title,
 		null,
 		config.sectionTitle && mw.util.escapeIdForLink( config.sectionTitle )
 	);
-	articleLink = new OO.ui.ButtonWidget( {
+	const articleLink = new OO.ui.ButtonWidget( {
 		label: mw.msg( 'cx-source-view-page' ),
 		href: linkHref,
 		target: '_blank',
@@ -63,7 +61,7 @@ mw.cx.ui.SourceColumn.prototype.add = function ( $translationUnit, position ) {
 };
 
 mw.cx.ui.SourceColumn.prototype.insertAt = function ( index, $element ) {
-	var lastIndex = this.$content.children().length;
+	const lastIndex = this.$content.children().length;
 
 	if ( index < 0 ) {
 		index = Math.max( 0, lastIndex + 1 + index );
@@ -85,21 +83,18 @@ mw.cx.ui.SourceColumn.prototype.setTranslation = function () {
 };
 
 mw.cx.ui.SourceColumn.prototype.showLoadingIndicator = function () {
-	var $title, userLanguage, $loadingIndicatorContent,
-		$loadingIndicatorSpinner;
-
 	this.$loadingIndicator = $( '<div>' )
 		.addClass( 'cx-column__loading-indicator' );
 
-	$title = $( '<span>' )
+	const $title = $( '<span>' )
 		.prop( {
 			lang: this.language,
 			dir: this.direction
 		} )
 		.text( this.getTitle() );
 
-	userLanguage = mw.config.get( 'wgUserLanguage' );
-	$loadingIndicatorContent = $( '<div>' )
+	const userLanguage = mw.config.get( 'wgUserLanguage' );
+	const $loadingIndicatorContent = $( '<div>' )
 		.prop( {
 			lang: userLanguage,
 			dir: $.uls.data.getDir( userLanguage )
@@ -107,7 +102,7 @@ mw.cx.ui.SourceColumn.prototype.showLoadingIndicator = function () {
 		.addClass( 'cx-column__loading-indicator--text' )
 		.append( mw.message( 'cx-source-loading', $title ).parseDom() );
 
-	$loadingIndicatorSpinner = mw.cx.widgets.spinner();
+	const $loadingIndicatorSpinner = mw.cx.widgets.spinner();
 	this.$loadingIndicator.append( $loadingIndicatorSpinner, $loadingIndicatorContent );
 	this.$element.append( this.$loadingIndicator );
 };

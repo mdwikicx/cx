@@ -21,7 +21,7 @@ use MediaWiki\Rest\LocalizedHttpException;
 use MediaWiki\Revision\MutableRevisionRecord;
 use MediaWiki\Revision\RevisionRecord;
 use MediaWiki\Revision\SlotRecord;
-use User;
+use MediaWiki\User\User;
 use WikitextContent;
 
 class DirectParsoidClient implements ParsoidClient {
@@ -61,15 +61,13 @@ class DirectParsoidClient implements ParsoidClient {
 		PageIdentity $page,
 		RevisionRecord $revision = null
 	): HtmlOutputRendererHelper {
-		$helper = $this->helperFactory->newHtmlOutputRendererHelper();
-
 		// TODO: remove this once we no longer need a User object for rate limiting (T310476).
 		if ( $this->performer instanceof User ) {
 			$user = $this->performer;
 		} else {
 			$user = User::newFromIdentity( $this->performer->getUser() );
 		}
-		$helper->init( $page, [], $user, null );
+		$helper = $this->helperFactory->newHtmlOutputRendererHelper( $page, [], $user, null );
 
 		if ( $revision ) {
 			$helper->setRevision( $revision );
@@ -88,8 +86,6 @@ class DirectParsoidClient implements ParsoidClient {
 		PageIdentity $page,
 		string $html
 	): HtmlInputTransformHelper {
-		$helper = $this->helperFactory->newHtmlInputTransformHelper();
-
 		// Fake REST body
 		$body = [
 			'html' => [
@@ -97,7 +93,9 @@ class DirectParsoidClient implements ParsoidClient {
 			]
 		];
 
-		$helper->init( $page, $body, [], null, null );
+		$helper = $this->helperFactory->newHtmlInputTransformHelper(
+			[], $page, $body, [], null, null
+		);
 
 		return $helper;
 	}

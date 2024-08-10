@@ -6,7 +6,7 @@
 'use strict';
 /* eslint-disable no-implicit-globals */
 
-var $pLangList = $( '#p-lang ul' );
+const $pLangList = $( '#p-lang ul' );
 
 /**
 	* Checks if there is a page in the target language.
@@ -15,7 +15,7 @@ var $pLangList = $( '#p-lang ul' );
 	* @return {boolean}
 	*/
 function pageInLanguageExists( code ) {
-	var map = require( '../config.json' ).ContentTranslationDomainCodeMapping,
+	const map = require( '../config.json' ).ContentTranslationDomainCodeMapping,
 		domainCode = map[ code ] || code;
 
 	return $( 'li.interlanguage-link.interwiki-' + domainCode ).length === 1;
@@ -32,9 +32,8 @@ function pageInLanguageExists( code ) {
 	* @return {string[]} Target languages
 	*/
 function getSuggestedTargetLanguages() {
-	var splitCode, splitCodes, specialCodeIndex,
-		possibleTargetLanguages = [],
-		pageLanguage = mw.config.get( 'wgPageContentLanguage' ).split( '-' )[ 0 ];
+	let possibleTargetLanguages = [];
+	const pageLanguage = mw.config.get( 'wgPageContentLanguage' ).split( '-' )[ 0 ];
 
 	possibleTargetLanguages.push( mw.config.get( 'wgUserLanguage' ) );
 	possibleTargetLanguages.push( mw.uls.getBrowserLanguage() );
@@ -50,15 +49,15 @@ function getSuggestedTargetLanguages() {
 
 	// Replace possibly non-standard, macro and duplicate language codes
 	// with normalized counterparts
-	splitCodes = {
+	const splitCodes = {
 		// Suggest both varieties of Belarusian when requesting 'be'
 		be: [ 'be', 'be-tarask' ],
 		// Suggest both varieties of Norwegian when requesting 'no'
 		no: [ 'nb', 'nn' ]
 	};
 
-	for ( splitCode in splitCodes ) {
-		specialCodeIndex = possibleTargetLanguages.indexOf( splitCode );
+	for ( const splitCode in splitCodes ) {
+		const specialCodeIndex = possibleTargetLanguages.indexOf( splitCode );
 		if ( specialCodeIndex > -1 ) {
 			possibleTargetLanguages.splice( specialCodeIndex, 1 );
 			Array.prototype.push.apply( possibleTargetLanguages, splitCodes[ splitCode ] );
@@ -75,7 +74,8 @@ function getSuggestedTargetLanguages() {
 }
 
 function prepareCXInterLanguageLinks( suggestedTargetLanguages ) {
-	var $newItem, count = 0, maxListSize = 3;
+	let count = 0;
+	const maxListSize = 3;
 
 	// Remove duplicates
 	suggestedTargetLanguages = suggestedTargetLanguages.filter( function ( element, index ) {
@@ -83,7 +83,7 @@ function prepareCXInterLanguageLinks( suggestedTargetLanguages ) {
 	} );
 
 	suggestedTargetLanguages.some( function ( code ) {
-		$newItem = mw.cx.createCXInterlanguageItem( code );
+		const $newItem = mw.cx.createCXInterlanguageItem( code );
 		$pLangList.prepend( $newItem );
 		// Array.prototype.some breaks the iteration first time `true` is returned
 		return ++count === maxListSize;
@@ -91,14 +91,12 @@ function prepareCXInterLanguageLinks( suggestedTargetLanguages ) {
 }
 
 function init() {
-	var suggestedTargetLanguages;
-
 	// No language links on the page
 	if ( $pLangList.length === 0 ) {
 		return;
 	}
 
-	suggestedTargetLanguages = getSuggestedTargetLanguages();
+	const suggestedTargetLanguages = getSuggestedTargetLanguages();
 
 	if ( !suggestedTargetLanguages.length ) {
 		return;

@@ -54,7 +54,11 @@ class RecentSignificantEditStore {
 		$primaryDb = $this->lb->getConnection( DB_PRIMARY );
 		$values['cxse_timestamp'] = $primaryDb->timestamp();
 
-		$primaryDb->insert( self::TABLE_NAME, $values, __METHOD__ );
+		$primaryDb->newInsertQueryBuilder()
+			->insertInto( self::TABLE_NAME )
+			->row( $values )
+			->caller( __METHOD__ )
+			->execute();
 		$newId = $primaryDb->insertId();
 		$edit->setId( $newId );
 		// Keep only the 10 newest edits and delete the rest
@@ -79,12 +83,12 @@ class RecentSignificantEditStore {
 		$values = $this->normalizeEdit( $edit );
 		$values['cxse_timestamp'] = $primaryDb->timestamp();
 
-		$primaryDb->update(
-			self::TABLE_NAME,
-			$values,
-			[ 'cxse_id' => $edit->getId() ],
-			__METHOD__
-		);
+		$primaryDb->newUpdateQueryBuilder()
+			->update( self::TABLE_NAME )
+			->set( $values )
+			->where( [ 'cxse_id' => $edit->getId() ] )
+			->caller( __METHOD__ )
+			->execute();
 	}
 
 	/**
@@ -107,7 +111,11 @@ class RecentSignificantEditStore {
 		}, array_slice( $edits, 10 ) );
 
 		$primaryDb = $this->lb->getConnection( DB_PRIMARY );
-		$primaryDb->delete( self::TABLE_NAME, [ 'cxse_id' => $editIdsToDelete ], __METHOD__ );
+		$primaryDb->newDeleteQueryBuilder()
+			->deleteFrom( self::TABLE_NAME )
+			->where( [ 'cxse_id' => $editIdsToDelete ] )
+			->caller( __METHOD__ )
+			->execute();
 	}
 
 	/**
@@ -119,14 +127,17 @@ class RecentSignificantEditStore {
 	 * @return RecentSignificantEdit[]
 	 */
 	public function findEditsByUser( int $userId ): array {
-		$conditions = [
-			'cxse_global_user_id' => $userId,
-			'cxse_wiki_family' => $this->currentWikiFamilyKey
-		];
-		$options = [ 'ORDER BY' => 'cxse_timestamp asc' ];
-
 		$replicaDb = $this->lb->getConnection( DB_REPLICA );
-		$result = $replicaDb->select( self::TABLE_NAME, IDatabase::ALL_ROWS, $conditions, __METHOD__, $options );
+		$result = $replicaDb->newSelectQueryBuilder()
+			->select( IDatabase::ALL_ROWS )
+			->from( self::TABLE_NAME )
+			->where( [
+				'cxse_global_user_id' => $userId,
+				'cxse_wiki_family' => $this->currentWikiFamilyKey
+			] )
+			->orderBy( 'cxse_timestamp' )
+			->caller( __METHOD__ )
+			->fetchResultSet();
 
 		$edits = [];
 		foreach ( $result as $row ) {
@@ -146,15 +157,18 @@ class RecentSignificantEditStore {
 	 * @return RecentSignificantEdit|null
 	 */
 	public function findExistingEdit( int $userId, int $pageWikidataId, string $language ): ?RecentSignificantEdit {
-		$conditions = [
-			'cxse_global_user_id' => $userId,
-			"cxse_page_wikidata_id" => $pageWikidataId,
-			"cxse_language" => $language,
-			'cxse_wiki_family' => $this->currentWikiFamilyKey
-		];
-
 		$replicaDb = $this->lb->getConnection( DB_REPLICA );
-		$row = $replicaDb->selectRow( self::TABLE_NAME, IDatabase::ALL_ROWS, $conditions, __METHOD__ );
+		$row = $replicaDb->newSelectQueryBuilder()
+			->select( IDatabase::ALL_ROWS )
+			->from( self::TABLE_NAME )
+			->where( [
+				'cxse_global_user_id' => $userId,
+				'cxse_page_wikidata_id' => $pageWikidataId,
+				'cxse_language' => $language,
+				'cxse_wiki_family' => $this->currentWikiFamilyKey
+			] )
+			->caller( __METHOD__ )
+			->fetchRow();
 
 		if ( !$row ) {
 			return null;
@@ -178,14 +192,14 @@ class RecentSignificantEditStore {
 	 * @return RecentSignificantEdit[]
 	 */
 	public function findEditsForPotentialSuggestions( int $userId, int $wikidataId, string $language ): array {
+		$replicaDb = $this->lb->getConnection( DB_REPLICA );
 		$conditions = [
 			'cxse_global_user_id' => $userId,
 			'cxse_page_wikidata_id' => $wikidataId,
-			"cxse_language != '$language'",
+			$replicaDb->expr( 'cxse_language', '!=', $language ),
 			"cxse_wiki_family" => $this->currentWikiFamilyKey
 		];
 
-		$replicaDb = $this->lb->getConnection( DB_REPLICA );
 		$result = $replicaDb->newSelectQueryBuilder()
 			->select( [
 				'cxse_id',

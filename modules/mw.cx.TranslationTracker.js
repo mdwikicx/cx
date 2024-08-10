@@ -9,8 +9,8 @@
  * @class
  * @param {ve.init.mw.CXTarget} veTarget
  * @param {Object} config
- * @cfg {string} sourceLanguage
- * @cfg {string} targetLanguage
+ * @param {string} config.sourceLanguage
+ * @param {string} config.targetLanguage
  */
 mw.cx.TranslationTracker = function MwCXTranslationTracker( veTarget, config ) {
 	this.sourceLanguage = config.sourceLanguage;
@@ -602,15 +602,19 @@ mw.cx.TranslationTracker.prototype.sectionsWithMTAbuse = function () {
 };
 
 /**
+ * @typedef {Object} ProgressMap
+ * @property {number} any Translation progress, expressed as number of translated sections
+ * out of total number of translations.
+ * @property {number} mt Number of unmodified tokens in translation. Sections excluded from
+ * MT abuse checking are not counted.
+ * @property {number} human Number of user-provided tokens, calculated as MT percentage
+ * subtracted from 100%.
+ */
+
+/**
  * Calculate the translation progress percentages.
  *
- * @return {Object} Map for translation progress metrics
- * @return {number} return.any Translation progress, expressed as number of translated sections
- * out of total number of translations.
- * @return {number} return.mt Number of unmodified tokens in translation. Sections excluded from
- * MT abuse checking are not counted.
- * @return {number} return.human Number of user-provided tokens, calculated as MT percentage
- * subtracted from 100%.
+ * @return {ProgressMap} Map for translation progress metrics
  */
 mw.cx.TranslationTracker.prototype.getTranslationProgress = function () {
 	const sourceSectionCount = Object.keys( this.sections ).length,

@@ -11,14 +11,11 @@
  *
  * @param {Object} [config] Configuration
  * @param {string} config.title The title of the article for the column
- * @param {string|null} config.sectionTitle The title of the section for the column
  * @param {string} config.language The language of the article for the column
  * @param {mw.cx.SiteMapper} config.siteMapper SiteMapper instance
  * @param {string} [config.sectionTitle] The section title of the article for the column
  */
 mw.cx.ui.ArticleColumn = function ( config ) {
-	var languageLabel;
-
 	// Configuration initialization
 	config = $.extend( {}, config, {
 		continuous: true,
@@ -53,7 +50,7 @@ mw.cx.ui.ArticleColumn = function ( config ) {
 	}
 	this.direction = $.uls.data.getDir( config.language );
 
-	languageLabel = new OO.ui.LabelWidget( {
+	const languageLabel = new OO.ui.LabelWidget( {
 		label: $.uls.data.getAutonym( config.language ),
 		dir: this.direction,
 		classes: [ 'cx-column-language-label' ]

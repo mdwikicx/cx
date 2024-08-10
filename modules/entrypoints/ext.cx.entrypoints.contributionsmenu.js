@@ -7,19 +7,19 @@
 ( function () {
 	'use strict';
 
-	var CAMPAIGN = 'contributionsmenu',
-		isMenuAttached = false;
+	const CAMPAIGN = 'contributionsmenu';
+	let isMenuAttached = false;
 
 	/**
 	 * @return {jQuery.Object}
 	 */
 	function getTranslationsItem() {
-		var $link, cxUrlParams = {
+		const cxUrlParams = {
 			campaign: CAMPAIGN,
 			to: mw.config.get( 'wgContentLanguage' )
 		};
 
-		$link = $( '<a>' )
+		const $link = $( '<a>' )
 			.prop( 'href', mw.util.getUrl( 'Special:ContentTranslation', cxUrlParams ) )
 			.attr( 'title', mw.msg( 'cx-campaign-contributionsmenu-mytranslations-tooltip' ) )
 			.append(
@@ -40,9 +40,8 @@
 	 * @param {jQuery.Object} $myUploads list item element.
 	 */
 	function attachCallout( $trigger, $myContributions, $myTranslations, $myUploads ) {
-		var callout,
-			$menu = $( '<ul>' )
-				.append( $myContributions, $myTranslations, $myUploads );
+		const $menu = $( '<ul>' )
+			.append( $myContributions, $myTranslations, $myUploads );
 
 		$trigger.callout( {
 			trigger: 'hover',
@@ -51,7 +50,7 @@
 			content: $menu
 		} );
 
-		callout = $trigger.data( 'callout' );
+		const callout = $trigger.data( 'callout' );
 
 		mw.hook( 'mw.cx.betafeature.enabled' ).add( function () {
 			// Show after a few milliseconds to get all position calculation correct
@@ -64,9 +63,8 @@
 	}
 
 	function attachMenu( $trigger ) {
-		var $myContributions, $myTranslations, $myUploads,
-			nextNode = document.getElementById( 'pt-mycontris' ),
-			useCallout = mw.config.get( 'skin' ) !== 'vector-2022';
+		let nextNode = document.getElementById( 'pt-mycontris' );
+		const useCallout = mw.config.get( 'skin' ) !== 'vector-2022';
 
 		nextNode = nextNode ? nextNode.nextSibling : null;
 		// Make sure we attach this menu only once
@@ -75,7 +73,7 @@
 		}
 		isMenuAttached = true;
 
-		$myContributions = $( '<li>' )
+		const $myContributions = $( '<li>' )
 			.addClass( 'cx-campaign-contributions' )
 			.append(
 				$( '<a>' )
@@ -87,13 +85,13 @@
 					)
 			);
 
-		$myTranslations = getTranslationsItem( !useCallout );
+		const $myTranslations = getTranslationsItem();
 
 		if ( $( '.mw-special-Preferences' ).length ) {
 			$myTranslations.addClass( 'cx-campaign-new-beta-feature' );
 		}
 
-		$myUploads = $( '<li>' )
+		const $myUploads = $( '<li>' )
 			.addClass( 'cx-campaign-uploads' )
 			.append( $( '<a>' )
 				.attr( 'href', '//commons.wikimedia.org/wiki/Special:MyUploads' )
@@ -152,10 +150,10 @@
 	}
 
 	function showFeatureDiscovery( $trigger ) {
-		var fd, $container = $( '<div>' ).addClass( 'cx-feature-discovery-container' );
+		const $container = $( '<div>' ).addClass( 'cx-feature-discovery-container' );
 
 		$trigger.append( $container );
-		fd = new mw.cx.ui.FeatureDiscoveryWidget( {
+		const fd = new mw.cx.ui.FeatureDiscoveryWidget( {
 			title: mw.msg( 'cx-feature-discovery-title' ),
 			content: mw.msg( 'cx-feature-discovery-content' ),
 			dismissLabel: mw.msg( 'cx-feature-discovery-dismiss' ),
@@ -168,7 +166,7 @@
 		} );
 		$container.append( fd.$element );
 		$trigger.one( 'click', function () {
-			var api = new mw.Api();
+			const api = new mw.Api();
 			// Prevent default click action.
 			fd.show();
 			// Never show this again.
@@ -186,7 +184,7 @@
 	}
 
 	$( function () {
-		var $trigger = $( '#pt-mycontris' );
+		const $trigger = $( '#pt-mycontris' );
 
 		if ( mw.config.get( 'wgContentTranslationEntryPointFD' ) ) {
 			mw.loader.using( 'mw.cx.ui.FeatureDiscoveryWidget' ).then( function () {

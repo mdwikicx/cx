@@ -6,9 +6,9 @@
  *
  * @constructor
  * @param {Object} [config] Configuration options
- * @cfg {mw.Message|string} [message] Main message.
- * @cfg {mw.Message|string} [details] Additional details.
- * @cfg {OO.ui.ButtonWidget[]} [buttons] Array of additional buttons.
+ * @param {mw.Message|string} [config.message] Main message.
+ * @param {mw.Message|string} [config.details] Additional details.
+ * @param {OO.ui.ButtonWidget[]} [config.buttons] Array of additional buttons.
  */
 mw.cx.ui.MessageWidget = function CXMessageWidget( config ) {
 	// Configuration initialization
@@ -34,9 +34,8 @@ OO.inheritClass( mw.cx.ui.MessageWidget, OO.ui.MessageWidget );
 /* Methods */
 
 mw.cx.ui.MessageWidget.prototype.composeMessage = function ( message, details ) {
-	var $message, $details;
-	$message = $( '<span>' ).addClass( 'cx-message-widget-message' );
-	$details = $( '<span>' ).addClass( 'cx-message-widget-details' );
+	const $message = $( '<span>' ).addClass( 'cx-message-widget-message' );
+	const $details = $( '<span>' ).addClass( 'cx-message-widget-details' );
 	if ( message instanceof mw.Message ) {
 		$message.append( message.parseDom() );
 	} else {
@@ -57,7 +56,7 @@ mw.cx.ui.MessageWidget.prototype.composeMessage = function ( message, details ) 
  * @param {OO.ui.ButtonWidget[]} buttons Array of additional buttons.
  */
 mw.cx.ui.MessageWidget.prototype.addButtons = function ( buttons ) {
-	var $buttons = $( '<div>' ).addClass( 'cx-message-widget-buttons' );
+	const $buttons = $( '<div>' ).addClass( 'cx-message-widget-buttons' );
 
 	if ( !buttons ) {
 		return;

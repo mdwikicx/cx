@@ -10,9 +10,9 @@
  * @param {mw.cx.ui.TranslationView} translationView
  * @param {Object} [config] Configuration object
  * TODO: Only pass optional parameters in config
- * @cfg {mw.cx.SiteMapper} siteMapper
- * @cfg {mw.cx.MachineTranslationManager} MTManager
- * @cfg {mw.cx.MachineTranslationService} MTService
+ * @param {mw.cx.SiteMapper} config.siteMapper
+ * @param {mw.cx.MachineTranslationManager} config.MTManager
+ * @param {mw.cx.MachineTranslationService} config.MTService
  * TODO: toolbarConfig
  */
 ve.init.mw.CXTarget = function VeInitMwCXTarget( translationView, config ) {
@@ -48,9 +48,9 @@ ve.init.mw.CXTarget = function VeInitMwCXTarget( translationView, config ) {
 	 * An integer holding the value of the namespace,
 	 * into which the translation will be published
 	 *
-	 * @type {number|null}
+	 * @type {number}
 	 */
-	this.publishNamespace = null;
+	this.publishNamespace = mw.cx.getDefaultTargetNamespace();
 	// @var {ve.ui.CXSurface}
 	this.sourceSurface = null;
 	// @var {ve.ui.CXSurface}
@@ -509,8 +509,6 @@ ve.init.mw.CXTarget.prototype.enablePublishButton = function () {
 
 /**
  * Translation restore event handler
- *
- * @param {mw.cx.dm.Translation} translationModel
  */
 ve.init.mw.CXTarget.prototype.onTranslationRestore = function () {
 	if ( mw.Title.newFromText( this.pageName ) ) {
@@ -586,8 +584,6 @@ ve.init.mw.CXTarget.prototype.setPublishNameSpaceByPageTitle = function () {
 /**
  * Called in several places to update the namespace based on the page title for article translations,
  * and also update the state of the tools of the "publish" toolbar
- *
- * @return void
  */
 ve.init.mw.CXTarget.prototype.updateNamespace = function () {
 	const isSectionTranslation = this.translationView.targetColumn.isSectionTranslation();
@@ -610,6 +606,9 @@ ve.init.mw.CXTarget.prototype.getPublishNamespace = function () {
  * @fires publish
  */
 ve.init.mw.CXTarget.prototype.onPublishButtonClick = function () {
+	if ( !this.checkIfUserCanPublish() ) {
+		return;
+	}
 	// Disable the trigger button
 	this.publishButton.setDisabled( true )
 		.setTitle( mw.msg( 'cx-publish-button-publishing' ) );
@@ -617,6 +616,19 @@ ve.init.mw.CXTarget.prototype.onPublishButtonClick = function () {
 	this.translationView.contentContainer.$element.toggleClass( 'oo-ui-widget-disabled', true );
 	this.emit( 'publish' );
 	this.updateNamespace();
+};
+
+/**
+ * @return {boolean}
+ */
+ve.init.mw.CXTarget.prototype.checkIfUserCanPublish = function () {
+	const userPermissionChecker = new mw.cx.UserPermissionChecker(
+		this,
+		this.translationView,
+		this.translation
+	);
+
+	return userPermissionChecker.checkIfUserCanPublish();
 };
 
 ve.init.mw.CXTarget.prototype.attachToolbar = function () {
@@ -1057,7 +1069,7 @@ ve.init.mw.CXTarget.prototype.translateSection = function ( sectionId, provider,
  * @param {string|null} previousProvider
  * @param {string} newProvider
  * @param {Object} options
- * @cfg {boolean} noCache Do not use cached version
+ * @param {boolean} options.noCache Do not use cached version
  * @return {jQuery.promise}
  * @fires changeContentSource
  */

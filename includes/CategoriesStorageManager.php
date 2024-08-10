@@ -17,7 +17,7 @@ class CategoriesStorageManager {
 	private const TYPE_SOURCE = 'source';
 	private const TYPE_USER = 'user';
 
-	private static $CATEGORIES_SECTION = [
+	private const CATEGORIES_SECTION = [
 		'cxc_section_id' => 'CX_CATEGORY_METADATA'
 	];
 
@@ -44,9 +44,14 @@ class CategoriesStorageManager {
 		$conditions = [
 			'cxc_translation_id' => $translationId,
 			'cxc_origin' => $origin
-		] + self::$CATEGORIES_SECTION;
+		] + self::CATEGORIES_SECTION;
 
-		$db->update( 'cx_corpora', $values, $conditions, __METHOD__ );
+		$db->newUpdateQueryBuilder()
+			->update( 'cx_corpora' )
+			->set( $values )
+			->where( $conditions )
+			->caller( __METHOD__ )
+			->execute();
 	}
 
 	/**
@@ -64,7 +69,7 @@ class CategoriesStorageManager {
 		$commonValues = [
 			'cxc_translation_id' => $translationId,
 			'cxc_timestamp' => $db->timestamp()
-		] + self::$CATEGORIES_SECTION;
+		] + self::CATEGORIES_SECTION;
 
 		if ( $targetCategories ) {
 			$values[] = [
@@ -81,7 +86,11 @@ class CategoriesStorageManager {
 		}
 
 		if ( $values !== [] ) {
-			$db->insert( 'cx_corpora', $values, __METHOD__ );
+			$db->newInsertQueryBuilder()
+				->insertInto( 'cx_corpora' )
+				->rows( $values )
+				->caller( __METHOD__ )
+				->execute();
 		}
 	}
 
@@ -97,6 +106,7 @@ class CategoriesStorageManager {
 	public static function save(
 		$translationId, $sourceCategories, $targetCategories, $newTranslation
 	) {
+		/** @var LoadBalancer $lb */
 		$lb = MediaWikiServices::getInstance()->getService( 'ContentTranslation.LoadBalancer' );
 		$db = $lb->getConnection( DB_PRIMARY );
 
@@ -128,14 +138,18 @@ class CategoriesStorageManager {
 	 * @return bool
 	 */
 	private static function exists( $translationId ) {
+		/** @var LoadBalancer $lb */
 		$lb = MediaWikiServices::getInstance()->getService( 'ContentTranslation.LoadBalancer' );
 		$db = $lb->getConnection( DB_PRIMARY );
 
-		$conditions = [ 'cxc_translation_id' => $translationId ] + self::$CATEGORIES_SECTION;
-
-		$result = $db->select(
-			'cx_corpora', 'cxc_content', $conditions, __METHOD__, [ 'FOR UPDATE' ]
-		);
+		$result = $db->newSelectQueryBuilder()
+			->select( 'cxc_content' )
+			->from( 'cx_corpora' )
+			->where( [ 'cxc_translation_id' => $translationId ] )
+			->andWhere( self::CATEGORIES_SECTION )
+			->forUpdate()
+			->caller( __METHOD__ )
+			->fetchResultSet();
 
 		return $result->numRows() > 0;
 	}
