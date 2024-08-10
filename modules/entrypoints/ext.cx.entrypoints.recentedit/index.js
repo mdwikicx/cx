@@ -1,13 +1,13 @@
-( function () {
+(function () {
 	/**
 	 * This variable contains an array of objects that contain all
 	 * edited sections by the user in languages other than the current one.
 	 *
 	 * @type {{ language: string, page: string, sections: string[]}[]}
 	 */
-	var recentEdits = mw.config.get( 'wgSectionTranslationRecentlyEditedSections' );
+	var recentEdits = mw.config.get('wgSectionTranslationRecentlyEditedSections');
 	var isRecentEditInvitationSuppressed =
-		mw.config.get( 'wgCXSectionTranslationRecentEditInvitationSuppressed', false );
+		mw.config.get('wgCXSectionTranslationRecentEditInvitationSuppressed', false);
 	var hiddenInvitationStorageKey = 'sx_recent_edit_invitation_hidden';
 	/**
 	 * Given a title and a source language, this method fetches section
@@ -19,32 +19,32 @@
 	 * @param {string} sourceLanguage
 	 * @return {Promise<Object|null>}
 	 */
-	function fetchSectionSuggestions( title, sourceLanguage ) {
+	function fetchSectionSuggestions(title, sourceLanguage) {
 		var siteMapper = new mw.cx.SiteMapper(),
 			targetLanguage = siteMapper.getCurrentWikiLanguageCode(),
 			cxServerParams = [
 				title,
 				sourceLanguage,
 				targetLanguage
-			].map( function ( param ) {
-				return encodeURIComponent( param );
-			} ),
+			].map(function (param) {
+				return encodeURIComponent(param);
+			}),
 			cxServerSectionSuggestionApiUrl = siteMapper.getCXServerUrl(
-				'/suggest/sections/' + cxServerParams.join( '/' )
+				'/suggest/sections/' + cxServerParams.join('/')
 			);
 
-		return fetch( cxServerSectionSuggestionApiUrl )
-			.then( function ( response ) {
+		return fetch(cxServerSectionSuggestionApiUrl)
+			.then(function (response) {
 				return response.ok ?
 					response.json() :
 					null;
-			} )
-			.then( function ( suggestionResult ) {
-				if ( suggestionResult && suggestionResult.sections ) {
+			})
+			.then(function (suggestionResult) {
+				if (suggestionResult && suggestionResult.sections) {
 					return suggestionResult.sections;
 				}
 				return null;
-			} );
+			});
 	}
 
 	/**
@@ -56,19 +56,19 @@
 	 * @param {{ language: string, page: string, sections: string[] }} recentEdit
 	 * @param {Object} missingSections
 	 */
-	function renderInvitation( recentEdit, missingSections ) {
-		var Vue = require( 'vue' ),
-			InvitationComponent = require( './RecentEditEntrypointInvitation.vue' ),
-			panel = document.createElement( 'section' ),
-			container = document.getElementById( 'mw-mf-page-center' );
+	function renderInvitation(recentEdit, missingSections) {
+		var Vue = require('vue'),
+			InvitationComponent = require('./RecentEditEntrypointInvitation.vue'),
+			panel = document.createElement('section'),
+			container = document.getElementById('mw-mf-page-center');
 		panel.className = 'sx-recentedit-entrypoint-banners';
 		container = container || document.body;
-		container.appendChild( panel );
-		Vue.createMwApp( InvitationComponent, {
+		container.appendChild(panel);
+		Vue.createMwApp(InvitationComponent, {
 			recentEdit: recentEdit,
 			missingSections: missingSections,
 			hiddenInvitationStorageKey: hiddenInvitationStorageKey
-		} ).mount( panel );
+		}).mount(panel);
 	}
 
 	/**
@@ -84,42 +84,42 @@
 	 * @param {{ language: string, page: string, sections: string[] }} recentEdit
 	 * @return {Promise<boolean>}
 	 */
-	function handleSectionSuggestionsByEdit( recentEdit ) {
+	function handleSectionSuggestionsByEdit(recentEdit) {
 		var sourceLanguage = recentEdit.language,
 			pageTitle = recentEdit.page,
 			sectionTitles = recentEdit.sections;
 
-		return fetchSectionSuggestions( pageTitle, sourceLanguage )
-			.then( function ( sections ) {
+		return fetchSectionSuggestions(pageTitle, sourceLanguage)
+			.then(function (sections) {
 				var firstMissingEditedSection, i, sourceMissingSections, missingSection;
-				if ( !sections || !sections.missing ) {
+				if (!sections || !sections.missing) {
 					return false;
 				}
-				sourceMissingSections = Object.keys( sections.missing );
-				for ( i = 0; i < sourceMissingSections.length; i++ ) {
-					missingSection = sourceMissingSections[ i ];
-					if ( sectionTitles.indexOf( missingSection ) > -1 ) {
+				sourceMissingSections = Object.keys(sections.missing);
+				for (i = 0; i < sourceMissingSections.length; i++) {
+					missingSection = sourceMissingSections[i];
+					if (sectionTitles.indexOf(missingSection) > -1) {
 						firstMissingEditedSection = missingSection;
 					}
 				}
 
-				if ( !firstMissingEditedSection ) {
+				if (!firstMissingEditedSection) {
 					return false;
 				}
 
-				var hiddenInvitations = mw.storage.getObject( hiddenInvitationStorageKey ) || [];
-				var isInvitationHidden = function ( hiddenInvitation ) {
+				var hiddenInvitations = mw.storage.getObject(hiddenInvitationStorageKey) || [];
+				var isInvitationHidden = function (hiddenInvitation) {
 					return hiddenInvitation.language === sourceLanguage && hiddenInvitation.page === pageTitle && hiddenInvitation.section === firstMissingEditedSection;
 				};
-				for ( i = 0; i < hiddenInvitations.length; i++ ) {
-					if ( isInvitationHidden( hiddenInvitations[ i ] ) ) {
+				for (i = 0; i < hiddenInvitations.length; i++) {
+					if (isInvitationHidden(hiddenInvitations[i])) {
 						return false;
 					}
 				}
 
-				renderInvitation( recentEdit, sections.missing );
+				renderInvitation(recentEdit, sections.missing);
 				return true;
-			} );
+			});
 	}
 
 	/**
@@ -132,22 +132,22 @@
 	 *
 	 * @param {number} editIndex
 	 */
-	function handleRecentEditsRecursively( editIndex ) {
-		if ( editIndex >= recentEdits.length ) {
+	function handleRecentEditsRecursively(editIndex) {
+		if (editIndex >= recentEdits.length) {
 			return;
 		}
 
-		handleSectionSuggestionsByEdit( recentEdits[ editIndex ] ).then( function ( success ) {
-			if ( success ) {
+		handleSectionSuggestionsByEdit(recentEdits[editIndex]).then(function (success) {
+			if (success) {
 				return;
 			}
-			handleRecentEditsRecursively( editIndex + 1 );
-		} );
+			handleRecentEditsRecursively(editIndex + 1);
+		});
 	}
 
-	if ( !isRecentEditInvitationSuppressed ) {
+	if (!isRecentEditInvitationSuppressed) {
 		// Start the recursion from the first index
-		handleRecentEditsRecursively( 0 );
+		handleRecentEditsRecursively(0);
 	}
 
-}() );
+}());
