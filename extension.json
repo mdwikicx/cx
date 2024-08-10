@@ -335,7 +335,7 @@
 				"view": "//mdwiki.org/wiki/$2",
 				"action": "//mdwiki.org/w/index.php?title=$2",
 				"api": "//mdwiki.org/w/api.php",
-				"cx": "https://cxserver.wikimedia.org/v1",
+				"cx": "https://cxserver.wikimedia.org/v2",
 				"cookieDomain": null,
 				"restbase": "//mdwiki.org/api/rest_v1"
 			}
