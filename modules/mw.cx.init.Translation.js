@@ -272,10 +272,6 @@ mw.cx.init.Translation.prototype.fetchSourcePageContent = function (wikiPage, ta
 	const fetchPageUrl = siteMapper.getCXServerUrl(apiURL, fetchParams);
 
 	const options = {
-		mode: 'no-cors',
-		headers: {
-			userAgent: 'WikiProjectMed Translation Dashboard/1.0 (https://mdwiki.toolforge.org/; tools.mdwiki@toolforge.org)',
-		},
 		method: 'GET',
 		dataType: 'json'
 	}
