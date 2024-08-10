@@ -278,7 +278,7 @@ async function fix_it(text) {
  * @return {Promise}
  */
 
-mw.cx.init.Translation.prototype.fetchSourcePageContent = async function (wikiPage, targetLanguage, siteMapper) {
+mw.cx.init.Translation.prototype.fetchSourcePageContent = function (wikiPage, targetLanguage, siteMapper) {
 	const title = wikiPage.getTitle().replace(/ /g, '_')
 	const fetchParams = {
 		$sourcelanguage: siteMapper.getWikiDomainCode(wikiPage.getLanguage()),
@@ -288,29 +288,22 @@ mw.cx.init.Translation.prototype.fetchSourcePageContent = async function (wikiPa
 	};
 	let apiURL = '/page/$sourcelanguage/$targetlanguage/$title';
 
-	// var fetchPageUrl = "https://mdwiki.toolforge.org/cx/get_html.php?title=" + title
-	var fetchPageUrl = "https://mdwiki.org/w/rest.php/v1/page/" + title + "/html"
-
 	// If revision is requested, load that revision of page.
 	if (wikiPage.getRevision()) {
 		fetchParams.$revision = wikiPage.getRevision();
 		apiURL += '/$revision';
-
-		// fetchPageUrl = "https://mdwiki.toolforge.org/cx/get_html.php?revision=" + fetchParams.$revision
-		fetchPageUrl = "https://mdwiki.org/w/rest.php/v1/revision/" + fetchParams.$revision + "/html"
 	}
 
-	// const fetchPageUrl = siteMapper.getCXServerUrl(apiURL, fetchParams);
+	const fetchPageUrl = siteMapper.getCXServerUrl(apiURL, fetchParams);
 
 	const options = {
-		mode: 'no-cors',
 		headers: {
 			userAgent: 'WikiProjectMed Translation Dashboard/1.0 (https://mdwiki.toolforge.org/; tools.mdwiki@toolforge.org)',
 		},
 		method: 'GET',
 		dataType: 'json'
 	}
-	const result = await fetch(fetchPageUrl, options).then((response) => {
+	const result = fetch(fetchPageUrl, options).then((response) => {
 		if (!response.ok) {
 			console.error("Error fetching source page: " + response.statusText);
 			return Promise.reject(response);
@@ -319,22 +312,7 @@ mw.cx.init.Translation.prototype.fetchSourcePageContent = async function (wikiPa
 		return response.json();
 	});
 
-	var segmented_Content = result.segmentedContent;
-
-	if (!segmented_Content || segmented_Content.length < 1) {
-		console.error("mdwiki.toolforge.org/cx: Empty source page content: " + title);
-		return result;
-	} else {
-		segmented_Content = fix_it(segmented_Content);
-	};
-
-	const result2 = {
-		sourceLanguage: fetchParams.$sourcelanguage,
-		title: fetchParams.$title,
-		revision: fetchParams.$revision,
-		segmentedContent: segmented_Content
-	};
-	return result2;
+	return result;
 };
 
 /**
