@@ -1,0 +1,15 @@
+.svn
+*~
+*.kate-swp
+.*.swp
+.idea
+*.vscode/
+docs/
+composer.lock
+vendor/
+node_modules/
+.eslintcache
+*.js.map
+.DS_Store
+tests/selenium/log
+**/i18n/**
