@@ -158,32 +158,26 @@ const fetchSegmentedContent = (
     const title = sourceTitle.replace(/ /g, "_")
     const sourceWikiCode = siteMapper.getWikiDomainCode(sourceLanguage);
     const targetWikiCode = siteMapper.getWikiDomainCode(targetLanguage);
+
     const cxServerParams = {
-        $sourcelanguage: sourceWikiCode,
-        $targetlanguage: targetWikiCode,
-        // Manual normalisation to avoid redirects on spaces but not to break namespaces
-        $title: title,
+        sourcelanguage: sourceWikiCode,
+        targetlanguage: targetWikiCode,
     };
 
-    var cxServerApiURL = "https://medwiki.toolforge.org/get_html.php?title=" + title
+    var cxServerApiURL = "https://medwiki.toolforge.org/get_html.php";
 
-    let relativeApiURL = "/page/$sourcelanguage/$targetlanguage/$title";
-
-    // If revision is requested, load that revision of page.
     if (revision) {
-        cxServerParams.$revision = revision;
-        relativeApiURL += "/$revision";
-
-        cxServerApiURL = "https://medwiki.toolforge.org/get_html.php?revision=" + cxServerParams.$revision
+        cxServerParams.revision = revision;
+    } else {
+        cxServerParams.title = title;
     }
-
-    // Example: https://cxserver.wikimedia.org/v2/page/en/es/Vlasovite
-    // const cxServerApiURL = siteMapper.getCXServerUrl( relativeApiURL, cxServerParams );
-
     const options = {
         method: 'GET',
         dataType: 'json'
     }
+
+    cxServerApiURL = cxServerApiURL + "?" + $.param(cxServerParams)
+
     const result = fetch(cxServerApiURL, options)
         .then((response) => response.json())
         .then((response) => response.segmentedContent);

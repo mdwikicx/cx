@@ -256,20 +256,21 @@ mw.cx.init.Translation.prototype.attachToDOM = function (veTarget) {
 mw.cx.init.Translation.prototype.fetchSourcePageContent = async function (wikiPage, targetLanguage, siteMapper) {
 	const title = wikiPage.getTitle().replace(/ /g, '_')
 
-	const fetchParams = {
-		$sourcelanguage: siteMapper.getWikiDomainCode(wikiPage.getLanguage()),
-		$targetlanguage: targetLanguage,
-		// Manual normalisation to avoid redirects on spaces but not to break namespaces
-		$title: title
+	const Params = {
+		sourcelanguage: siteMapper.getWikiDomainCode(wikiPage.getLanguage()),
+		targetlanguage: targetLanguage,
 	};
 
-	var fetchPageUrl = "https://medwiki.toolforge.org/get_html.php?title=" + title
+	var fetchPageUrl = "https://medwiki.toolforge.org/get_html.php";
 
 	// If revision is requested, load that revision of page.
 	if (wikiPage.getRevision()) {
-		fetchParams.$revision = wikiPage.getRevision();
-		fetchPageUrl = "https://medwiki.toolforge.org/get_html.php?revision=" + fetchParams.$revision
+		Params.revision = wikiPage.getRevision();
+	} else {
+		Params.title = title;
 	}
+
+	fetchPageUrl = fetchPageUrl + "?" + $.param(Params);
 
 	const options = {
 		method: 'GET',
