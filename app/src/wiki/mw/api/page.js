@@ -140,6 +140,30 @@ const fetchPageContent = (
     );
 };
 
+async function fix_it(text) {
+
+    const options = {
+        // headers: { "Content-Type": "application/json" },
+        // mode: 'no-cors',
+        method: 'POST',
+        dataType: 'json',
+        // dispatcher: new Agent({ connect: { timeout: 60_000 } }),
+        body: JSON.stringify({ html: text })
+    };
+    const url = 'http://localhost:8000/textp';
+    // const url = 'https://ncc2c.toolforge.org/textp';
+    const response = await fetch(url, options);
+    if (!response.ok) {
+        console.error(response.statusText);
+        return text;
+    }
+    const data = await response.json();
+
+    const result = data.result;
+
+    return result;
+}
+
 /**
  * Fetches segmented content of a page for given source language,
  * target language and source title.
@@ -149,7 +173,51 @@ const fetchPageContent = (
  * @param {string|null} revision
  * @return {Promise<String>}
  */
+
 const fetchSegmentedContent = (
+    sourceLanguage,
+    targetLanguage,
+    sourceTitle,
+    revision = null
+) => {
+    const title = sourceTitle.replace(/ /g, "_")
+    const sourceWikiCode = siteMapper.getWikiDomainCode(sourceLanguage);
+    const targetWikiCode = siteMapper.getWikiDomainCode(targetLanguage);
+    const cxServerParams = {
+        $sourcelanguage: sourceWikiCode,
+        $targetlanguage: targetWikiCode,
+        // Manual normalisation to avoid redirects on spaces but not to break namespaces
+        $title: title,
+    };
+
+    let relativeApiURL = "/page/$sourcelanguage/$targetlanguage/$title";
+
+    // If revision is requested, load that revision of page.
+    if (revision) {
+        cxServerParams.$revision = revision;
+        relativeApiURL += "/$revision";
+    }
+
+    // Example: https://cxserver.wikimedia.org/v2/page/en/es/Vlasovite
+    const cxServerApiURL = siteMapper.getCXServerUrl(relativeApiURL, cxServerParams);
+
+    const result = fetch(cxServerApiURL)
+        .then((response) => response.json())
+        .then((response) => response.segmentedContent);
+
+    return result;
+};
+
+/**
+ * Fetches segmented content of a page for given source language,
+ * target language and source title.
+ * @param {string} sourceLanguage
+ * @param {string} targetLanguage
+ * @param {string} sourceTitle
+ * @param {string|null} revision
+ * @return {Promise<String>}
+ */
+const fetchSegmentedContent_old = (
     sourceLanguage,
     targetLanguage,
     sourceTitle,

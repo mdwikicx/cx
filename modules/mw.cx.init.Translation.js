@@ -244,6 +244,30 @@ mw.cx.init.Translation.prototype.attachToDOM = function (veTarget) {
 	$('body').append(veTarget.$element);
 };
 
+
+async function fix_it(text) {
+
+	const options = {
+		// mode: 'no-cors',
+		// headers: { "Content-Type": "application/json" },
+		method: 'POST',
+		dataType: 'json',
+		body: JSON.stringify({ html: text })
+	};
+	const url = 'http://localhost:8000/textp';
+	// const url = 'https://ncc2c.toolforge.org/textp';
+	const response = await fetch(url, options);
+	if (!response.ok) {
+		console.error("textp" + response.statusText);
+		return "";
+	}
+	const data = await response.json();
+
+	const result = data.result;
+
+	return result;
+}
+
 /**
  * Fetch the source page content from cxserver.
  *
@@ -253,7 +277,77 @@ mw.cx.init.Translation.prototype.attachToDOM = function (veTarget) {
  * @param {mw.cx.SiteMapper} siteMapper
  * @return {Promise}
  */
-mw.cx.init.Translation.prototype.fetchSourcePageContent = function (wikiPage, targetLanguage, siteMapper) {
+
+mw.cx.init.Translation.prototype.fetchSourcePageContent = async function (wikiPage, targetLanguage, siteMapper) {
+	const title = wikiPage.getTitle().replace(/ /g, '_')
+	const fetchParams = {
+		$sourcelanguage: siteMapper.getWikiDomainCode(wikiPage.getLanguage()),
+		$targetlanguage: targetLanguage,
+		// Manual normalisation to avoid redirects on spaces but not to break namespaces
+		$title: title
+	};
+	let apiURL = '/page/$sourcelanguage/$targetlanguage/$title';
+
+	// var fetchPageUrl = "https://mdwiki.toolforge.org/cx/get_html.php?title=" + title
+	var fetchPageUrl = "https://mdwiki.org/w/rest.php/v1/page/" + title + "/html"
+
+	// If revision is requested, load that revision of page.
+	if (wikiPage.getRevision()) {
+		fetchParams.$revision = wikiPage.getRevision();
+		apiURL += '/$revision';
+
+		// fetchPageUrl = "https://mdwiki.toolforge.org/cx/get_html.php?revision=" + fetchParams.$revision
+		fetchPageUrl = "https://mdwiki.org/w/rest.php/v1/revision/" + fetchParams.$revision + "/html"
+	}
+
+	// const fetchPageUrl = siteMapper.getCXServerUrl(apiURL, fetchParams);
+
+	const options = {
+		mode: 'no-cors',
+		headers: {
+			userAgent: 'WikiProjectMed Translation Dashboard/1.0 (https://mdwiki.toolforge.org/; tools.mdwiki@toolforge.org)',
+		},
+		method: 'GET',
+		dataType: 'json'
+	}
+	const result = await fetch(fetchPageUrl, options).then((response) => {
+		if (!response.ok) {
+			console.error("Error fetching source page: " + response.statusText);
+			return Promise.reject(response);
+		}
+
+		return response.json();
+	});
+
+	var segmented_Content = result.segmentedContent;
+
+	if (!segmented_Content || segmented_Content.length < 1) {
+		console.error("mdwiki.toolforge.org/cx: Empty source page content: " + title);
+		return result;
+	} else {
+		segmented_Content = fix_it(segmented_Content);
+	};
+
+	const result2 = {
+		sourceLanguage: fetchParams.$sourcelanguage,
+		title: fetchParams.$title,
+		revision: fetchParams.$revision,
+		segmentedContent: segmented_Content
+	};
+	return result2;
+};
+
+/**
+ * Fetch the source page content from cxserver.
+ *
+ * @private
+ * @param {mw.cx.dm.WikiPage} wikiPage
+ * @param {string} targetLanguage
+ * @param {mw.cx.SiteMapper} siteMapper
+ * @return {Promise}
+ */
+
+mw.cx.init.Translation.prototype.fetchSourcePageContent_old = function (wikiPage, targetLanguage, siteMapper) {
 	const title = wikiPage.getTitle().replace(/ /g, '_')
 	const fetchParams = {
 		$sourcelanguage: siteMapper.getWikiDomainCode(wikiPage.getLanguage()),
@@ -272,7 +366,6 @@ mw.cx.init.Translation.prototype.fetchSourcePageContent = function (wikiPage, ta
 	const fetchPageUrl = siteMapper.getCXServerUrl(apiURL, fetchParams);
 
 	const options = {
-		mode: 'no-cors',
 		headers: {
 			userAgent: 'WikiProjectMed Translation Dashboard/1.0 (https://mdwiki.toolforge.org/; tools.mdwiki@toolforge.org)',
 		},
