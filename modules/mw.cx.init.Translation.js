@@ -254,13 +254,13 @@ mw.cx.init.Translation.prototype.attachToDOM = function (veTarget) {
  * @return {Promise}
  */
 mw.cx.init.Translation.prototype.fetchSourcePageContent = function (wikiPage, targetLanguage, siteMapper) {
+	const title = wikiPage.getTitle().replace(/ /g, '_')
 	const fetchParams = {
 		$sourcelanguage: siteMapper.getWikiDomainCode(wikiPage.getLanguage()),
 		$targetlanguage: targetLanguage,
 		// Manual normalisation to avoid redirects on spaces but not to break namespaces
-		$title: wikiPage.getTitle().replace(/ /g, '_')
+		$title: title
 	};
-
 	let apiURL = '/page/$sourcelanguage/$targetlanguage/$title';
 
 	// If revision is requested, load that revision of page.
@@ -271,13 +271,24 @@ mw.cx.init.Translation.prototype.fetchSourcePageContent = function (wikiPage, ta
 
 	const fetchPageUrl = siteMapper.getCXServerUrl(apiURL, fetchParams);
 
-	return fetch(fetchPageUrl).then((response) => {
+	const options = {
+		mode: 'no-cors',
+		headers: {
+			userAgent: 'WikiProjectMed Translation Dashboard/1.0 (https://mdwiki.toolforge.org/; tools.mdwiki@toolforge.org)',
+		},
+		method: 'GET',
+		dataType: 'json'
+	}
+	const result = fetch(fetchPageUrl, options).then((response) => {
 		if (!response.ok) {
+			console.error("Error fetching source page: " + response.statusText);
 			return Promise.reject(response);
 		}
 
 		return response.json();
 	});
+
+	return result;
 };
 
 mw.cx.init.Translation.prototype.fetchSourcePageContentError = function (status) {
