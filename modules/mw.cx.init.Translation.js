@@ -2,6 +2,7 @@
 
 mw.cx.init = {};
 
+
 /**
  * This class loads translation documents (source and target) and sets up the main views and models.
  *

@@ -8,6 +8,7 @@ import { siteMapper, getUserCoordinates } from "../../../utils/mediawikiHelper";
  */
 const defaultThumbnailSize = 120;
 
+
 /**
  * Fetches metadata information for pages for the corresponding titles and language
  * and returns a promise that resolves to an array of Page objects
@@ -148,7 +149,6 @@ const fetchPageContent = (
  * @param {string|null} revision
  * @return {Promise<String>}
  */
-
 const fetchSegmentedContent = (
     sourceLanguage,
     targetLanguage,

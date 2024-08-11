@@ -361,7 +361,7 @@
 			"description": "The external Database cluster name where the database lives or false if not exists",
 			"value": false
 		},
-		"ContentTranslationSiteTemplates": {
+		"ContentTranslationSiteTemplates_mdwiki": {
 			"value": {
 				"view": "//mdwiki.org/wiki/$2",
 				"action": "//mdwiki.org/w/index.php?title=$2",
@@ -371,9 +371,19 @@
 				"restbase": "//mdwiki.org/api/rest_v1"
 			}
 		},
+		"ContentTranslationSiteTemplates": {
+			"value": {
+				"view": "//$1.wikipedia.org/wiki/$2",
+				"action": "//$1.wikipedia.org/w/index.php?title=$2",
+				"api": "//$1.wikipedia.org/w/api.php",
+				"cx": "https://cxserver.wikimedia.org/v1",
+				"cookieDomain": "medwiki.toolforge.org",
+				"restbase": "//$1.wikipedia.org/api/rest_v1"
+			}
+		},
 		"ContentTranslationTranslateInTarget": {
 			"description": "Whether to open Special:ContentTranslation in the target wiki when clicking the button in the entry point. The domain will be based on $wgContentTranslationSiteTemplates. The default is to open Special:ContentTranslation on the same wiki",
-			"value": false
+			"value": true
 		},
 		"ContentTranslationAsBetaFeature": {
 			"description": "Whether to have CX available only as a beta feature and only shown to the users who have enabled the beta feature.",
