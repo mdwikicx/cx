@@ -2,7 +2,6 @@
 
 mw.cx.init = {};
 
-
 /**
  * This class loads translation documents (source and target) and sets up the main views and models.
  *
@@ -259,12 +258,12 @@ mw.cx.init.Translation.prototype.attachToDOM = function (veTarget) {
  * @param {mw.cx.SiteMapper} siteMapper
  * @return {Promise}
  */
-mw.cx.init.Translation.prototype.fetchSourcePageContent = async function (wikiPage, targetLanguage, siteMapper) {
+mw.cx.init.Translation.prototype.fetchSourcePageContent_mdwiki = async function (wikiPage, targetLanguage, siteMapper) {
 	// Manual normalisation to avoid redirects on spaces but not to break namespaces
 	const title = wikiPage.getTitle().replace(/ /g, '_')
 
 	const fetchParams = {
-		sourcelanguage: siteMapper.getWikiDomainCode(wikiPage.getLanguage()),
+		sourcelanguage: "mdwiki",
 		targetlanguage: targetLanguage,
 	};
 
@@ -304,7 +303,10 @@ mw.cx.init.Translation.prototype.fetchSourcePageContent = async function (wikiPa
  * @param {mw.cx.SiteMapper} siteMapper
  * @return {Promise}
  */
-mw.cx.init.Translation.prototype.fetchSourcePageContent_old = function (wikiPage, targetLanguage, siteMapper) {
+mw.cx.init.Translation.prototype.fetchSourcePageContent = function (wikiPage, targetLanguage, siteMapper) {
+    if (wikiPage.getLanguage() === "mdwiki") {
+        return mw.cx.init.Translation.prototype.fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMapper);
+    }
 	const fetchParams = {
 		$sourcelanguage: siteMapper.getWikiDomainCode(wikiPage.getLanguage()),
 		$targetlanguage: targetLanguage,

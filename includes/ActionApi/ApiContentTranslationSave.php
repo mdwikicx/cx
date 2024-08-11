@@ -66,7 +66,7 @@ class ApiContentTranslationSave extends ApiBase {
 			$this->dieBlocked( $block );
 		}
 
-		if ( !$this->languageNameUtils->isKnownLanguageTag( $params['from'] ) && $params['from']  !=== "mdwiki") {
+		if ( !$this->languageNameUtils->isKnownLanguageTag( $params['from'] )) {
 			$this->dieWithError( 'apierror-cx-invalidsourcelanguage', 'invalidsourcelanguage' );
 		}
 

@@ -8,7 +8,6 @@ import { siteMapper, getUserCoordinates } from "../../../utils/mediawikiHelper";
  */
 const defaultThumbnailSize = 120;
 
-
 /**
  * Fetches metadata information for pages for the corresponding titles and language
  * and returns a promise that resolves to an array of Page objects
@@ -149,14 +148,14 @@ const fetchPageContent = (
  * @param {string|null} revision
  * @return {Promise<String>}
  */
-const fetchSegmentedContent = (
+const fetchSegmentedContent_mdwiki = (
     sourceLanguage,
     targetLanguage,
     sourceTitle,
     revision = null
 ) => {
     const title = sourceTitle.replace(/ /g, "_")
-    const sourceWikiCode = siteMapper.getWikiDomainCode(sourceLanguage);
+    const sourceWikiCode = sourceLanguage;
     const targetWikiCode = siteMapper.getWikiDomainCode(targetLanguage);
 
     const cxServerParams = {
@@ -195,12 +194,15 @@ const fetchSegmentedContent = (
  * @param {string|null} revision
  * @return {Promise<String>}
  */
-const fetchSegmentedContent_old = (
+const fetchSegmentedContent = (
     sourceLanguage,
     targetLanguage,
     sourceTitle,
     revision = null
 ) => {
+    if (sourceLanguage === "mdwiki") {
+        return fetchSegmentedContent_mdwiki(sourceLanguage, targetLanguage, sourceTitle, revision);
+    }
     const sourceWikiCode = siteMapper.getWikiDomainCode(sourceLanguage);
     const targetWikiCode = siteMapper.getWikiDomainCode(targetLanguage);
     const cxServerParams = {
