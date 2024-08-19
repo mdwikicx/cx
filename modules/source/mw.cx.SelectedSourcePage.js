@@ -391,12 +391,15 @@ mw.cx.SelectedSourcePage.prototype.setData = function ( pageTitle, href, config 
 		const languageDecorator = function ( $language, languageCode ) {
 			if ( languagesPageExistsIn.indexOf( languageCode ) < 0 ) {
 				$language.css( 'font-weight', 'bold' );
+			} else {
+				// hide already in languages
+				$language.css( 'display', 'none' );
 			}
 		};
-
-		this.languageFilter.fillSourceLanguages( languagesPageExistsIn, true, {
-			ulsPurpose: 'cx-selectedpage-source'
-		} );
+		// disable this, show only mdwiki
+		// this.languageFilter.fillSourceLanguages( languagesPageExistsIn, true, {
+		// 	ulsPurpose: 'cx-selectedpage-source'
+		// } );
 
 		this.languageFilter.fillTargetLanguages( null, true, {
 			ulsPurpose: 'cx-selectedpage-target',
