@@ -120,18 +120,20 @@ class ApiContentTranslationPublish extends ApiBase {
 
 		$user_name = $this->getUser()->getName();
 
-		$t_Params = [
-			'title' => $title->getPrefixedDBkey(),
-			'text' => $wikitext,
-			'user' => $user_name,
-			'summary' => $summary,
-			'target' => $params['to'],
-			'sourcetitle' => $params['sourcetitle'],
-		];
+		if ( $params['from'] === "mdwiki ") {
+			$t_Params = [
+				'title' => $title->getPrefixedDBkey(),
+				'text' => $wikitext,
+				'user' => $user_name,
+				'summary' => $summary,
+				'target' => $params['to'],
+				'sourcetitle' => $params['sourcetitle'],
+			];
 
-		$Result = post_to_target($t_Params);
-		return $Result;
-		$wikitext .= "\n{{tr|" . $params['to'] . '|' . $params['sourcetitle'] . '|' . $user_name . '}}';
+			// $Result = post_to_target($t_Params);
+			// return $Result;
+			$wikitext .= "\n{{tr|" . $params['to'] . '|' . $params['sourcetitle'] . '|' . $user_name . '}}';
+		}
 
 		$apiParams = [
 			'action' => 'edit',
@@ -139,7 +141,6 @@ class ApiContentTranslationPublish extends ApiBase {
 			'text' => $wikitext,
 			'summary' => $summary,
 		];
-
 		$request = $this->getRequest();
 
 		$api = new ApiMain(
@@ -297,8 +298,8 @@ class ApiContentTranslationPublish extends ApiBase {
 				} );
 			}
 
-			// $targetURL = $this->targetUrlCreator->createTargetUrl( $targetTitle->getPrefixedDBkey(), $params['to'] );
-			$targetURL = SiteMapper::getPageURL( $params['to'], $targetTitle->getPrefixedDBkey() );
+			$targetURL = $this->targetUrlCreator->createTargetUrl( $targetTitle->getPrefixedDBkey(), $params['to'] );
+			// $targetURL = SiteMapper::getPageURL( $params['to'], $targetTitle->getPrefixedDBkey() );
 			$result = [
 				'result' => 'success',
 				'targeturl' => $targetURL

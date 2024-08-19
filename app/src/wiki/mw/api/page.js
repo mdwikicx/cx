@@ -161,6 +161,7 @@ const fetchSegmentedContent_mdwiki = (
     const cxServerParams = {
         sourcelanguage: sourceWikiCode,
         targetlanguage: targetWikiCode,
+        section0: 1,
     };
 
     var cxServerApiURL = "https://medwiki.toolforge.org/get_html.php";

@@ -265,6 +265,7 @@ mw.cx.init.Translation.prototype.fetchSourcePageContent_mdwiki = async function 
 	const fetchParams = {
 		sourcelanguage: "mdwiki",
 		targetlanguage: targetLanguage,
+		section0: 1,
 	};
 
 	var fetchPageUrl = "https://medwiki.toolforge.org/get_html.php";
