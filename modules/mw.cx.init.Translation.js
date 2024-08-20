@@ -283,14 +283,19 @@ mw.cx.init.Translation.prototype.fetchSourcePageContent_mdwiki = async function 
 		method: 'GET',
 		dataType: 'json'
 	}
-	const result = await fetch(fetchPageUrl, options).then((response) => {
-		if (!response.ok) {
-			console.error("Error fetching source page: " + response.statusText);
-			return Promise.reject(response);
-		}
+	const result = await fetch(fetchPageUrl, options)
+		.then((response) => {
+			if (!response.ok) {
+				console.error("Error fetching source page: " + response.statusText);
+				return Promise.reject(response);
+			}
+			return response.json();
 
-		return response.json();
-	});
+		})
+		.catch((error) => {
+			console.error("Network error: ", error);
+			throw error;
+		});
 
 	return result;
 };
