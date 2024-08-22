@@ -216,6 +216,7 @@ mw.cx.TargetArticle.prototype.publishSuccess = function ( response, jqXHR ) {
 				lang: this.targetLanguage,
 				sourcetitle: this.sourceTitle,
 				title: this.getTargetTitle(),
+				// campaign: campaign
 			};
 			var url = "https://mdwiki.toolforge.org/Translation_Dashboard/publish/index.php";
 			window.open( url + '?' + $.param( pp ), '_blank' );
