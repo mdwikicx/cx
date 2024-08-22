@@ -364,10 +364,14 @@ mw.cx.SelectedSourcePage.prototype.setData = function ( pageTitle, href, config 
 	this.getPageInfo( pageTitle, params ).done( function ( data ) {
 		this.renderPageViews( data.pageviews );
 
-		const numOfLanguages =
+		var numOfLanguages =
 			config.numOfLanguages ||
 			( OO.getProp( data, 'langlinkscount' ) || 0 ) + 1;
-		this.languageCount.setLabel( mw.language.convertNumber( numOfLanguages ) );
+		if ( data.langlinks ) {
+			numOfLanguages = data.langlinks.length + 1;
+		}
+
+		this.languageCount.setLabel( mw.language.convertNumber( numOfLanguages ));
 
 		// Reset source page titles
 		this.sourcePageTitles = {};
@@ -387,17 +391,23 @@ mw.cx.SelectedSourcePage.prototype.setData = function ( pageTitle, href, config 
 		const languageDecorator = function ( $language, languageCode ) {
 			if ( languagesPageExistsIn.indexOf( languageCode ) < 0 ) {
 				$language.css( 'font-weight', 'bold' );
+			} else {
+				// hide already in languages
+				$language.css( 'display', 'none' );
 			}
 		};
+		// disable this, show only mdwiki
+		// this.languageFilter.fillSourceLanguages( languagesPageExistsIn, true, {
+		// 	ulsPurpose: 'cx-selectedpage-source'
+		// } );
 
-		this.languageFilter.fillSourceLanguages( languagesPageExistsIn, true, {
-			ulsPurpose: 'cx-selectedpage-source'
-		} );
 		this.languageFilter.fillTargetLanguages( null, true, {
 			ulsPurpose: 'cx-selectedpage-target',
 			languageDecorator: languageDecorator
 		} );
+
 		this.languageFilter.setValidSourceLanguages( languagesPageExistsIn );
+
 	}.bind( this ) ).fail( function ( error ) {
 		mw.log( 'Error getting page info for ' + pageTitle + '. ' + error );
 	} );
