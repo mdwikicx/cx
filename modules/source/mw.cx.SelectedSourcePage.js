@@ -389,7 +389,10 @@ mw.cx.SelectedSourcePage.prototype.setData = function ( pageTitle, href, config 
 
 		const languagesPageExistsIn = Object.keys( this.sourcePageTitles );
 		const languageDecorator = function ( $language, languageCode ) {
-			if ( languagesPageExistsIn.indexOf( languageCode ) < 0 ) {
+			// hide en, simple code
+			if ( languageCode === 'en' || languageCode === 'simple' ) {
+				$language.css( 'display', 'none' );
+			} else if ( languagesPageExistsIn.indexOf( languageCode ) < 0 ) {
 				$language.css( 'font-weight', 'bold' );
 			} else {
 				// hide already in languages

@@ -85,6 +85,18 @@ mw.cx.init.Translation.prototype.init = function () {
 
 			this.sourceWikiPage.setRevision(sourcePageContent.revision);
 
+			if (this.sourceWikiPage.getLanguage() == "mdwiki") {
+				var segmented_error = sourcePageContent.error;
+				if (segmented_error) {
+					this.translationView.showMessage('error', mw.msg('cx-init-critical-error'), segmented_error);
+					// return;
+				} else if (sourcePageContent.segmentedContent.length === 0) {
+					// if length of segmentedContent is 0, it means the source page is empty print error message
+					this.translationView.showMessage('error', mw.msg('cx-init-critical-error'), 'Source text is empty refresh the page.');
+					// return;
+				}
+			}
+
 			return this.initTranslationModel(sourcePageContent.segmentedContent, draft).then((translationModel) => {
 				this.translationModel = translationModel;
 
@@ -206,6 +218,7 @@ mw.cx.init.Translation.prototype.initTranslationModel = function (sourceHtml, dr
 			}
 
 			const updatedSourceHtml = sourcePageContent.segmentedContent;
+
 			const updatedSourceDom = mw.cx.dm.Translation.static.getSourceDom(updatedSourceHtml, this.sourceWikiPage.getSectionTitle());
 			const updatedTargetDom = mw.cx.dm.Translation.static.getSourceDom(
 				updatedSourceHtml,

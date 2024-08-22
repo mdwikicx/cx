@@ -159,6 +159,26 @@ mw.cx.MachineTranslationService.prototype.fetchProvidersError = function () {
 };
 
 mw.cx.MachineTranslationService.prototype.fetchCXServerToken = function () {
+	// cxtoken
+
+    if (this.sourceLanguage === "mdwiki") {
+        var params = {
+            user: mw.user.getName(),
+			wiki: this.targetLanguage,
+        }
+		const options = {
+			method: 'GET',
+			dataType: 'json'
+		}
+
+		var url = "https://mdwiki.toolforge.org/Translation_Dashboard/publish/cxtoken.php?" + $.param(params)
+
+		const result = fetch(url, options)
+			.then((response) => response.json())
+
+		return result;
+    }
+
 	return new mw.Api().postWithToken( 'csrf', {
 		action: 'cxtoken',
 		assert: 'user'
