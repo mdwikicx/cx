@@ -275,6 +275,18 @@ mw.cx.init.Translation.prototype.fetchSourcePageContent_mdwiki = async function 
 	// Manual normalisation to avoid redirects on spaces but not to break namespaces
 	const title = wikiPage.getTitle().replace(/ /g, '_')
 
+	const simple_url = "https://cxserver.wikimedia.org/v2/page/simple/" + targetLanguage + "/User:Mr.%20Ibrahem%2F" + title;
+
+	const simple_result = await fetch(simple_url)
+		.then((response) => {
+			if (response.ok) {
+				return response.json();
+			}
+		})
+
+	if (simple_result) {
+		return simple_result;
+	}
 	const fetchParams = {
 		sourcelanguage: "mdwiki",
 		targetlanguage: targetLanguage,
