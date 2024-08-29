@@ -210,7 +210,8 @@ mw.cx.TargetArticle.prototype.publishSuccess = function ( response, jqXHR ) {
 	const publishResult = response[ publishAction ];
 
 	if ( publishResult.result === 'success' ) {
-		if ( this.sourceLanguage === "mdwiki") {
+		// TODO:
+		if ( this.sourceLanguage === "mdwiki" && publishResult.published_to == "local" ) {
 			const pp = {
 				user: mw.user.getName(),
 				lang: this.targetLanguage,

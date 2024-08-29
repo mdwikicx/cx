@@ -273,7 +273,8 @@ mw.cx.init.Translation.prototype.attachToDOM = function (veTarget) {
  */
 mw.cx.init.Translation.prototype.fetchSourcePageContent_mdwiki = async function (wikiPage, targetLanguage, siteMapper) {
 	// Manual normalisation to avoid redirects on spaces but not to break namespaces
-	const title = wikiPage.getTitle().replace(/ /g, '_')
+	var title = wikiPage.getTitle().replace(/ /g, '_')
+	title = title.replace('/', '%2F')
 
 	const simple_url = "https://cxserver.wikimedia.org/v2/page/simple/" + targetLanguage + "/User:Mr.%20Ibrahem%2F" + title;
 
@@ -285,6 +286,12 @@ mw.cx.init.Translation.prototype.fetchSourcePageContent_mdwiki = async function 
 		})
 
 	if (simple_result) {
+		simple_result.sourceLanguage = "en";
+		// replace simple.wikipedia with en.wikipedia
+		simple_result.segmentedContent = simple_result.segmentedContent.replace(/simple.wikipedia/g, "en.wikipedia");
+		simple_result.segmentedContent = simple_result.segmentedContent.replace("User:Mr. Ibrahem/", "");
+		simple_result.segmentedContent = simple_result.segmentedContent.replace("Drugbox", "Infobox drug");
+
 		return simple_result;
 	}
 	const fetchParams = {
@@ -294,6 +301,10 @@ mw.cx.init.Translation.prototype.fetchSourcePageContent_mdwiki = async function 
 	};
 
 	var fetchPageUrl = "https://medwiki.toolforge.org/get_html.php";
+
+	if (mw.user.getName() == "Mr. Ibrahem") {
+		fetchPageUrl = "https://medwiki.toolforge.org/get_html/oo.php";
+	};
 
 	// If revision is requested, load that revision of page.
 	if (wikiPage.getRevision()) {
