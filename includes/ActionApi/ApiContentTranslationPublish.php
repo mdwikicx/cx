@@ -109,6 +109,8 @@ class ApiContentTranslationPublish extends ApiBase {
 			$wikitext .= $categoryText;
 		}
 
+		$wikitext = trim($wikitext);
+
 		$sourceLink = '[[:' . Sitemapper::getDomainCode( $params['from'] )
 			. ':Special:Redirect/revision/'
 			. $this->translation->translation['sourceRevisionId']
@@ -122,7 +124,7 @@ class ApiContentTranslationPublish extends ApiBase {
 		$user_name = $this->getUser()->getName();
 		$mdwiki_result = false;
 
-		if ( $params['from'] === "mdwiki ") {#$mdwiki_result
+		if ( $params['from'] === "mdwiki") {#$mdwiki_result
 			$t_Params = [
 				'title' => $title->getPrefixedDBkey(),
 				'text' => $wikitext,
@@ -132,8 +134,8 @@ class ApiContentTranslationPublish extends ApiBase {
 				'sourcetitle' => $params['sourcetitle'],
 			];
 
-			// $mdwiki_result = post_to_target($t_Params);
-			// $this->published_to = "mdwiki";
+			$mdwiki_result = post_to_target($t_Params);
+			$this->published_to = "mdwiki";
 			// return $Result;
 			$wikitext = "<pre>$wikitext</pre>";
 
@@ -159,9 +161,9 @@ class ApiContentTranslationPublish extends ApiBase {
 
 		$api->execute();
 		$result = $api->getResult()->getResultData();
-		// if ( $params['from'] === "mdwiki ") {
-		// 	return $mdwiki_result;
-		// }
+		if ( $params['from'] === "mdwiki") { #  && $mdwiki_result
+			return $mdwiki_result;
+		}
 		return $result;
 	}
 
@@ -307,11 +309,11 @@ class ApiContentTranslationPublish extends ApiBase {
 			}
 
 			$targetURL = $this->targetUrlCreator->createTargetUrl( $targetTitle->getPrefixedDBkey(), $params['to'] );
-			$targetURL_wiki = SiteMapper::getPageURL( $params['to'], $targetTitle->getPrefixedDBkey() );
+			$targeturl_wiki = SiteMapper::getPageURL( $params['to'], $targetTitle->getPrefixedDBkey() );
 			$result = [
 				'result' => 'success',
-				'targeturl' => $targetURL_wiki,
-				'targetURL_local' => $targetURL,
+				'targeturl' => $targetURL,
+				'targeturl_wiki' => $targeturl_wiki,
 				'published_to' => $this->published_to
 			];
 
