@@ -1,15 +1,12 @@
 
 async function postUrlParamsResult(endPoint, params = {}) {
-	const usrAgent = 'WikiProjectMed Translation Dashboard/1.0 (https://medwiki.toolforge.org/; tools.medwiki@toolforge.org)';
 
 	const options = {
-		method: 'POST',
-		mode: 'no-cors',
-		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded',
-			'User-Agent': usrAgent
-		},
-		body: new URLSearchParams(params).toString(),
+        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        dataType: 'json',
+		// mode: 'no-c',
+        body: JSON.stringify(params)
 	};
 
 	const output = await fetch(endPoint, options)
