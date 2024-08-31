@@ -114,7 +114,7 @@ class ApiContentTranslationPublish extends ApiBase {
 		$sourceLink = '[[:' . Sitemapper::getDomainCode( $params['from'] )
 			. ':Special:Redirect/revision/'
 			. $this->translation->translation['sourceRevisionId']
-			. '|' . $params['sourcetitle'] . ']] to:' . $params['to'];
+			. '|' . $params['sourcetitle'] . ']] to:' . $params['to'] . " #mdwikicx";
 
 		$summary = $this->msg(
 			'cx-publish-summary',

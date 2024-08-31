@@ -271,84 +271,12 @@ mw.cx.init.Translation.prototype.attachToDOM = function (veTarget) {
  * @param {mw.cx.SiteMapper} siteMapper
  * @return {Promise}
  */
-mw.cx.init.Translation.prototype.fetchSourcePageContent_mdwiki = async function (wikiPage, targetLanguage, siteMapper) {
-	// Manual normalisation to avoid redirects on spaces but not to break namespaces
-	var title = wikiPage.getTitle().replace(/ /g, '_')
-	title = title.replace('/', '%2F')
-
-	const simple_url = "https://cxserver.wikimedia.org/v2/page/simple/" + targetLanguage + "/User:Mr.%20Ibrahem%2F" + title;
-
-	const simple_result = await fetch(simple_url)
-		.then((response) => {
-			if (response.ok) {
-				return response.json();
-			}
-		})
-
-	if (simple_result) {
-		simple_result.sourceLanguage = "en";
-		// replace simple.wikipedia with en.wikipedia
-		simple_result.segmentedContent = simple_result.segmentedContent.replace(/simple.wikipedia/g, "en.wikipedia");
-		simple_result.segmentedContent = simple_result.segmentedContent.replace("User:Mr. Ibrahem/", "");
-		simple_result.segmentedContent = simple_result.segmentedContent.replace("Drugbox", "Infobox drug");
-
-		return simple_result;
-	}
-	const fetchParams = {
-		sourcelanguage: "mdwiki",
-		targetlanguage: targetLanguage,
-		section0: 1,
-	};
-
-	var fetchPageUrl = "https://medwiki.toolforge.org/get_html.php";
-
-	if (mw.user.getName() == "Mr. Ibrahem") {
-		fetchPageUrl = "https://medwiki.toolforge.org/get_html/oo.php";
-	};
-
-	// If revision is requested, load that revision of page.
-	if (wikiPage.getRevision()) {
-		fetchParams.revision = wikiPage.getRevision();
-	} else {
-		fetchParams.title = title;
-	}
-
-	fetchPageUrl = fetchPageUrl + "?" + $.param(fetchParams);
-
-	const options = {
-		method: 'GET',
-		dataType: 'json'
-	}
-	const result = await fetch(fetchPageUrl, options)
-		.then((response) => {
-			if (!response.ok) {
-				console.error("Error fetching source page: " + response.statusText);
-				return Promise.reject(response);
-			}
-			return response.json();
-
-		})
-		.catch((error) => {
-			console.error("Network error: ", error);
-			throw error;
-		});
-
-	return result;
-};
-
-/**
- * Fetch the source page content from cxserver.
- *
- * @private
- * @param {mw.cx.dm.WikiPage} wikiPage
- * @param {string} targetLanguage
- * @param {mw.cx.SiteMapper} siteMapper
- * @return {Promise}
- */
 mw.cx.init.Translation.prototype.fetchSourcePageContent = function (wikiPage, targetLanguage, siteMapper) {
-    if (wikiPage.getLanguage() === "mdwiki") {
-        return mw.cx.init.Translation.prototype.fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMapper);
-    }
+
+	if (wikiPage.getLanguage() === "mdwiki") {
+		return mw.cx.TranslationMdwiki.fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMapper);
+	}
+
 	const fetchParams = {
 		$sourcelanguage: siteMapper.getWikiDomainCode(wikiPage.getLanguage()),
 		$targetlanguage: targetLanguage,
