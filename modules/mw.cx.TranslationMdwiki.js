@@ -2,9 +2,9 @@
 async function postUrlParamsResult(endPoint, params = {}) {
 	const usrAgent = 'WikiProjectMed Translation Dashboard/1.0 (https://medwiki.toolforge.org/; tools.medwiki@toolforge.org)';
 
-	const url = `${endPoint}?${new URLSearchParams(params).toString()}`;
 	const options = {
 		method: 'POST',
+		mode: 'no-cors',
 		headers: {
 			'Content-Type': 'application/x-www-form-urlencoded',
 			'User-Agent': usrAgent
@@ -16,7 +16,7 @@ async function postUrlParamsResult(endPoint, params = {}) {
 		.then((response) => {
 			if (!response.ok) {
 				console.error(`Fetch Error: ${response.statusText}`);
-				console.error(url);
+				console.error(endPoint);
 				return false;
 			}
 			return response.json();
@@ -26,7 +26,7 @@ async function postUrlParamsResult(endPoint, params = {}) {
 }
 
 async function doFixIt(text) {
-	let url = 'https://ncc2c.toolforge.org/textpx';
+	let url = 'https://ncc2c.toolforge.org/textp';
 
 	// if (window.location.hostname === 'localhost') {
 	// 	url = 'http://localhost:8000/textp';
@@ -152,16 +152,48 @@ async function get_new(title) {
 
 	if (!html) {
 		console.log("getMedwikiHtml: not found");
-		return out;
+		return false;
 	};
 
 	html = removeUnlinkedWikibase(html);
 
 	out.revision = getRevision(html);
 	out.segmentedContent = await doFixIt(html);
-
+	if (out.segmentedContent == "") {
+		console.log("doFixIt: not found");
+		return false;
+	};
 	return out;
 }
+
+async function get_html_from_mdwiki(targetLanguage, title, fetchPageUrl) {
+	const fetchParams = {
+		sourcelanguage: "mdwiki",
+		targetlanguage: targetLanguage,
+		section0: 1,
+		title: title
+	};
+
+	fetchPageUrl = fetchPageUrl + "?" + $.param(fetchParams);
+
+	const options = {
+		method: 'GET',
+		dataType: 'json'
+	};
+	const result = await fetch(fetchPageUrl, options)
+		.then((response) => {
+			if (!response.ok) {
+				console.error("Error fetching source page: " + response.statusText);
+				return Promise.reject(response);
+			}
+			return response.json();
+
+		})
+		.catch((error) => {
+			console.error("Network error: ", error);
+		});
+	return result;
+};
 
 async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMapper) {
 	// Manual normalisation to avoid redirects on spaces but not to break namespaces
@@ -181,46 +213,19 @@ async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMappe
 
 	var new_way = false;
 
-	if (new_way || mw.user.getName() == "Mr. Ibrahem" ) {
+	if (new_way || mw.user.getName() == "Mr. Ibrahem") {
 		// fetchPageUrl = "https://medwiki.toolforge.org/get_html/oo.php";
 		var resultx = await get_new(title);
-		if (resultx && resultx.segmentedContent != "") {
+		if (resultx) {
 			return resultx;
 		}
 	};
 
-	const fetchParams = {
-		sourcelanguage: "mdwiki",
-		targetlanguage: targetLanguage,
-		section0: 1,
-		title: title
-	};
-
-	fetchPageUrl = fetchPageUrl + "?" + $.param(fetchParams);
-
-	const options = {
-		method: 'GET',
-		dataType: 'json'
-	}
-	const result = await fetch(fetchPageUrl, options)
-		.then((response) => {
-			if (!response.ok) {
-				console.error("Error fetching source page: " + response.statusText);
-				return Promise.reject(response);
-			}
-			return response.json();
-
-		})
-		.catch((error) => {
-			console.error("Network error: ", error);
-			throw error;
-		});
+	const result = await get_html_from_mdwiki(targetLanguage, title, fetchPageUrl);
 
 	return result;
-};
 
+};
 mw.cx.TranslationMdwiki = {
-	from_simple,
-	fetchSourcePageContent_mdwiki,
-	get_new
+	fetchSourcePageContent_mdwiki
 }
