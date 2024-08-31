@@ -2,11 +2,11 @@
 async function postUrlParamsResult(endPoint, params = {}) {
 
 	const options = {
-        headers: { "Content-Type": "application/json" },
-        method: 'POST',
-        dataType: 'json',
+		headers: { "Content-Type": "application/json" },
+		method: 'POST',
+		dataType: 'json',
 		// mode: 'no-c',
-        body: JSON.stringify(params)
+		body: JSON.stringify(params)
 	};
 
 	const output = await fetch(endPoint, options)
@@ -85,18 +85,20 @@ async function getMedwikiHtml(title) {
 		method: 'GET',
 		dataType: 'json'
 	};
-
-	const result = await fetch(url, options)
-		.then((response) => {
-			if (response.ok) {
-				return response.json();
-			}
-		})
-		.catch((error) => {
-			console.log(error);
-		})
-	var html = result.html;
-
+	try {
+		const result = await fetch(url, options)
+			.then((response) => {
+				if (response.ok) {
+					return response.json();
+				}
+			})
+			.catch((error) => {
+				console.log(error);
+			})
+		var html = result.html;
+	} catch (error) {
+		console.log(error);
+	}
 	return html;
 }
 function getRevision(HTMLText) {
