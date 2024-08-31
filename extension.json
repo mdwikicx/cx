@@ -1535,6 +1535,7 @@
 				"ui/mw.cx.ui.ToolsColumn.js",
 				"dm/mw.cx.dm.DraftTranslationDTO.js",
 				"mw.cx.init.Translation.js",
+				"mw.cx.TranslationMdwiki.js",
 				"mw.cx.TargetArticle.js",
 				"mw.cx.TranslationController.js",
 				"mw.cx.TranslationTracker.js",

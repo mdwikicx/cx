@@ -210,7 +210,12 @@ mw.cx.TargetArticle.prototype.publishSuccess = function ( response, jqXHR ) {
 	const publishResult = response[ publishAction ];
 
 	if ( publishResult.result === 'success' ) {
-		if ( this.sourceLanguage === "mdwiki") {
+		var targeturl = publishResult.targeturl;
+		if (this.sourceLanguage === "mdwiki" && publishResult.published_to != "local") {
+			targeturl = publishResult.targeturl_wiki;
+		}
+		// TODO:
+		if ( this.sourceLanguage === "mdwiki" && publishResult.published_to == "local" ) {
 			const pp = {
 				user: mw.user.getName(),
 				lang: this.targetLanguage,
@@ -221,7 +226,7 @@ mw.cx.TargetArticle.prototype.publishSuccess = function ( response, jqXHR ) {
 			var url = "https://mdwiki.toolforge.org/Translation_Dashboard/publish/index.php";
 			window.open( url + '?' + $.param( pp ), '_blank' );
 		}
-		this.translation.setTargetURL( publishResult.targeturl );
+		this.translation.setTargetURL( targeturl );
 		return this.publishComplete( publishResult.targettitle || null );
 	}
 

@@ -396,7 +396,7 @@ mw.cx.SelectedSourcePage.prototype.setData = function ( pageTitle, href, config 
 				$language.css( 'font-weight', 'bold' );
 			} else {
 				// hide already in languages
-				$language.css( 'display', 'none' );
+				// $language.css( 'display', 'none' );
 			}
 		};
 		// disable this, show only mdwiki

@@ -90,6 +90,7 @@ class ApiContentTranslationPublish extends ApiBase {
 		$this->languageNameUtils = $languageNameUtils;
 		$this->translationStore = $translationStore;
 		$this->targetUrlCreator = $targetUrlCreator;
+		$this->published_to = "local";
 	}
 
 	protected function getParsoidClient(): ParsoidClient {
@@ -108,10 +109,12 @@ class ApiContentTranslationPublish extends ApiBase {
 			$wikitext .= $categoryText;
 		}
 
+		$wikitext = trim($wikitext);
+
 		$sourceLink = '[[:' . Sitemapper::getDomainCode( $params['from'] )
 			. ':Special:Redirect/revision/'
 			. $this->translation->translation['sourceRevisionId']
-			. '|' . $params['sourcetitle'] . ']] to:' . $params['to'];
+			. '|' . $params['sourcetitle'] . ']] to:' . $params['to'] . " #mdwikicx";
 
 		$summary = $this->msg(
 			'cx-publish-summary',
@@ -119,8 +122,9 @@ class ApiContentTranslationPublish extends ApiBase {
 		)->inContentLanguage()->text();
 
 		$user_name = $this->getUser()->getName();
+		$mdwiki_result = false;
 
-		if ( $params['from'] === "mdwiki ") {
+		if ( $params['from'] === "mdwiki") {#$mdwiki_result
 			$t_Params = [
 				'title' => $title->getPrefixedDBkey(),
 				'text' => $wikitext,
@@ -130,8 +134,11 @@ class ApiContentTranslationPublish extends ApiBase {
 				'sourcetitle' => $params['sourcetitle'],
 			];
 
-			// $Result = post_to_target($t_Params);
+			$mdwiki_result = post_to_target($t_Params);
+			$this->published_to = "mdwiki";
 			// return $Result;
+			$wikitext = "<pre>$wikitext</pre>";
+
 			$wikitext .= "\n{{tr|" . $params['to'] . '|' . $params['sourcetitle'] . '|' . $user_name . '}}';
 		}
 
@@ -153,8 +160,11 @@ class ApiContentTranslationPublish extends ApiBase {
 		);
 
 		$api->execute();
-
-		return $api->getResult()->getResultData();
+		$result = $api->getResult()->getResultData();
+		if ( $params['from'] === "mdwiki") { #  && $mdwiki_result
+			return $mdwiki_result;
+		}
+		return $result;
 	}
 
 	protected function getTags( array $params ) {
@@ -299,10 +309,12 @@ class ApiContentTranslationPublish extends ApiBase {
 			}
 
 			$targetURL = $this->targetUrlCreator->createTargetUrl( $targetTitle->getPrefixedDBkey(), $params['to'] );
-			// $targetURL = SiteMapper::getPageURL( $params['to'], $targetTitle->getPrefixedDBkey() );
+			$targeturl_wiki = SiteMapper::getPageURL( $params['to'], $targetTitle->getPrefixedDBkey() );
 			$result = [
 				'result' => 'success',
-				'targeturl' => $targetURL
+				'targeturl' => $targetURL,
+				'targeturl_wiki' => $targeturl_wiki,
+				'published_to' => $this->published_to
 			];
 
 			$this->translation->translation['status'] = TranslationStore::TRANSLATION_STATUS_PUBLISHED;
