@@ -144,6 +144,7 @@ mw.cx.TargetArticle.prototype.publish = function ( hasIssues, hasTooMuchUnmodifi
 			to: this.targetLanguage,
 			sourcetitle: this.sourceTitle,
 			title: this.getTargetTitle(),
+			// user: mw.user.getName(),
 			html,
 			categories: this.getTargetCategories( hasTooMuchUnmodifiedText ),
 			publishtags: this.getTags( hasTooMuchUnmodifiedText ),

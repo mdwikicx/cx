@@ -122,6 +122,11 @@ class ApiContentTranslationPublish extends ApiBase {
 		)->inContentLanguage()->text();
 
 		$user_name = $this->getUser()->getName();
+
+		if (isset($params['user']) && $params['user'] != '') {
+			$user_name = $params['user'];
+		}
+
 		$mdwiki_result = false;
 
 		if ( $params['from'] === "mdwiki") {#$mdwiki_result
