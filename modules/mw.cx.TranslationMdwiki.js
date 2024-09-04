@@ -210,9 +210,9 @@ async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMappe
 
 	var fetchPageUrl = "https://medwiki.toolforge.org/get_html/index.php";
 
-	var new_way = true;
+	const new_way = true;
 
-	if (new_way || mw.user.getName() == "Mr. Ibrahem") {
+	if (new_way || mw.user.getName() === "Mr. Ibrahem") {
 		// fetchPageUrl = "https://medwiki.toolforge.org/get_html/oo.php";
 		var resultx = await get_new(title);
 		if (resultx) {
