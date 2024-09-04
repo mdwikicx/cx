@@ -209,7 +209,8 @@ mw.cx.TargetArticle.prototype.publishSection = function () {
 mw.cx.TargetArticle.prototype.publishSuccess = function ( response, jqXHR ) {
 	const publishAction = this.translation.isSectionTranslation() ? 'cxpublishsection' : 'cxpublish';
 	const publishResult = response[ publishAction ];
-
+	console.log( "publishResult:" );
+	console.log( JSON.stringify( publishResult ) );
 	if ( publishResult.result === 'success' ) {
 		var targeturl = publishResult.targeturl;
 		if (this.sourceLanguage === "mdwiki" && publishResult.published_to != "local") {
