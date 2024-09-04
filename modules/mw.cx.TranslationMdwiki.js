@@ -194,6 +194,30 @@ async function get_html_from_mdwiki(targetLanguage, title, fetchPageUrl) {
 	return result;
 };
 
+/**
+ * Fetches the content of a specified wiki page from the MedWiki platform.
+ * This function handles the normalization of the page title to avoid issues 
+ * with redirects and spaces, and it can utilize different methods to retrieve 
+ * the page content based on certain conditions.
+ *
+ * @async
+ * @param {Object} wikiPage - The wiki page object containing metadata about the page.
+ * @param {string} targetLanguage - The language code for the desired content (e.g., 'en', 'fr').
+ * @param {Object} siteMapper - An object that maps site-specific configurations or settings.
+ * @returns {Promise<string|null>} A promise that resolves to the HTML content of the wiki page, 
+ *                                  or null if the content could not be retrieved.
+ *
+ * @throws {Error} Throws an error if there is a problem fetching the page content.
+ *
+ * @example
+ * fetchSourcePageContent_mdwiki(wikiPage, 'en', siteMapper)
+ *   .then(content => {
+ *     console.log(content);
+ *   })
+ *   .catch(error => {
+ *     console.error('Error fetching content:', error);
+ *   });
+ */
 async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMapper) {
 	// Manual normalisation to avoid redirects on spaces but not to break namespaces
 	var title = wikiPage.getTitle().replace(/ /g, '_');
