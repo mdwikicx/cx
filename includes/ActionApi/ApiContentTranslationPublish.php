@@ -341,6 +341,9 @@ class ApiContentTranslationPublish extends ApiBase {
 				'edit' => $saveresult['edit']
 			];
 		}
+		if ( isset( $saveresult['LinkToWikidata']) ) {
+			$result['LinkToWikidata'] = $saveresult['LinkToWikidata'];
+		};
 
 		$this->getResult()->addValue( null, $this->getModuleName(), $result );
 	}

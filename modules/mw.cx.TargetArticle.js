@@ -209,11 +209,15 @@ mw.cx.TargetArticle.prototype.publishSection = function () {
 mw.cx.TargetArticle.prototype.publishSuccess = function ( response, jqXHR ) {
 	const publishAction = this.translation.isSectionTranslation() ? 'cxpublishsection' : 'cxpublish';
 	const publishResult = response[ publishAction ];
-
+	console.log( "publishResult:" );
+	console.log( JSON.stringify( publishResult ) );
 	if ( publishResult.result === 'success' ) {
 		var targeturl = publishResult.targeturl;
 		if (this.sourceLanguage === "mdwiki" && publishResult.published_to != "local") {
 			targeturl = publishResult.targeturl_wiki;
+		}
+		if (publishResult.LinkToWikidata) {
+			console.log('LinkToWikidata: ' + JSON.stringify(publishResult.LinkToWikidata));
 		}
 		// TODO:
 		if ( this.sourceLanguage === "mdwiki" && publishResult.published_to == "local" ) {
