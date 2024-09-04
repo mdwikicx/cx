@@ -168,13 +168,14 @@ mw.cx.MachineTranslationService.prototype.fetchCXServerToken = function () {
         var params = {
             user: mw.user.getName(),
 			wiki: this.targetLanguage,
+			ty: "cxtoken",
         }
 		const options = {
 			method: 'GET',
 			dataType: 'json'
 		}
 
-		var url = "https://mdwiki.toolforge.org/Translation_Dashboard/publish/cxtoken.php?" + $.param(params)
+		var url = "https://mdwiki.toolforge.org/Translation_Dashboard/publish/token.php?" + $.param(params)
 
 		const result = fetch(url, options)
 			.then((response) => response.json())
@@ -213,7 +214,7 @@ mw.cx.MachineTranslationService.prototype.getCXServerToken = function () {
 
 	return this.tokenPromise.then( function ( token ) {
 		const now = Math.floor( Date.now() / 1000 );
-		if ( 'refreshAt' in token && token.refreshAt <= now ) {
+		if ( 'refreshAt'  in token && token.refreshAt <= now ) {
 			this.tokenPromise = undefined;
 			return this.getCXServerToken();
 		}
