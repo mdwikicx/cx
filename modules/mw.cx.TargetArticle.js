@@ -215,6 +215,9 @@ mw.cx.TargetArticle.prototype.publishSuccess = function ( response, jqXHR ) {
 		if (this.sourceLanguage === "mdwiki" && publishResult.published_to != "local") {
 			targeturl = publishResult.targeturl_wiki;
 		}
+		if (publishResult.LinkToWikidata) {
+			console.log('LinkToWikidata: ' + JSON.stringify(publishResult.LinkToWikidata));
+		}
 		// TODO:
 		if ( this.sourceLanguage === "mdwiki" && publishResult.published_to == "local" ) {
 			const pp = {
