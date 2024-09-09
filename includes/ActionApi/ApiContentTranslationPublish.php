@@ -53,8 +53,8 @@ function post_to_target($params)
 	curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_USERAGENT, $usr_agent);
-	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-	curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
+	curl_setopt($ch, CURLOPT_TIMEOUT, 15);
 
 	$response = curl_exec($ch);
 
@@ -111,9 +111,11 @@ class ApiContentTranslationPublish extends ApiBase {
 
 		$wikitext = trim($wikitext);
 
+		$sourceRevisionId = $this->translation->translation['sourceRevisionId'];
+
 		$sourceLink = '[[:' . Sitemapper::getDomainCode( $params['from'] )
 			. ':Special:Redirect/revision/'
-			. $this->translation->translation['sourceRevisionId']
+			. $sourceRevisionId
 			. '|' . $params['sourcetitle'] . ']] to:' . $params['to'] . " #mdwikicx";
 
 		$summary = $this->msg(
@@ -322,6 +324,10 @@ class ApiContentTranslationPublish extends ApiBase {
 				'published_to' => $this->published_to
 			];
 
+			if ( isset( $saveresult['LinkToWikidata']) ) {
+				$result['LinkToWikidata'] = $saveresult['LinkToWikidata'];
+			};
+
 			$this->translation->translation['status'] = TranslationStore::TRANSLATION_STATUS_PUBLISHED;
 			$this->translation->translation['targetURL'] = $targetURL;
 
@@ -341,10 +347,6 @@ class ApiContentTranslationPublish extends ApiBase {
 				'edit' => $saveresult['edit']
 			];
 		}
-		if ( isset( $saveresult['LinkToWikidata']) ) {
-			$result['LinkToWikidata'] = $saveresult['LinkToWikidata'];
-		};
-
 		$this->getResult()->addValue( null, $this->getModuleName(), $result );
 	}
 
