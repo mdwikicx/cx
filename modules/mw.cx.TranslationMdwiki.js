@@ -23,6 +23,10 @@ function add_sw_categories(html) {
 	if (regexInfoboxMedicalCondition.test(html)) {
 		categories.push(one("Magonjwa"));
 	}
+
+	console.log(JSON.stringify(categories));
+	console.log("add_sw_categories. Done");
+
 	return categories;
 }
 async function postUrlParamsResult(endPoint, params = {}) {
@@ -276,7 +280,7 @@ async function get_html_from_mdwiki(targetLanguage, title, fetchPageUrl) {
 	return result;
 };
 
-async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMapper) {
+async function fetchSourcePageContent_mdwiki_new(wikiPage, targetLanguage, siteMapper) {
 	// Manual normalisation to avoid redirects on spaces but not to break namespaces
 	var title = wikiPage.getTitle().replace(/ /g, '_');
 	title = title.replace('/', '%2F');
@@ -303,6 +307,15 @@ async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMappe
 	};
 
 	let result = await get_html_from_mdwiki(targetLanguage, title, fetchPageUrl);
+
+	return result;
+
+};
+
+async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMapper) {
+
+	let result = await fetchSourcePageContent_mdwiki_new(wikiPage, targetLanguage, siteMapper);
+
 	if (result && result.html && targetLanguage == "sw") {
 		let categories = add_sw_categories(result.html);
 		result.categories = categories;
@@ -310,6 +323,7 @@ async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMappe
 	return result;
 
 };
+
 mw.cx.TranslationMdwiki = {
 	fetchSourcePageContent_mdwiki
 }
