@@ -33,6 +33,22 @@
 		);
 	}
 
+	/**
+	     * Initializes the Content Translation (CX) service by setting up necessary configurations
+	     * and services based on the query parameters from the URL.
+	     *
+	     * This function checks for required query parameters and redirects to the Content Translation
+	     * special page if any are missing. It sets up global services such as the site mapper, request
+	     * manager, machine translation service, and machine translation manager. It also initializes
+	     * translation objects for source and target wiki pages.
+	     *
+	     * @throws {Error} Throws an error if the query parameters are invalid or if the required services
+	     *                 cannot be initialized.
+	     *
+	     * @example
+	     * // Call this function to initialize the CX service
+	     * initCX();
+	     */
 	function initCX() {
 		let services = {};
 
