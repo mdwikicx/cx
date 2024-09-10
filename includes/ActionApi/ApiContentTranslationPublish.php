@@ -135,6 +135,7 @@ class ApiContentTranslationPublish extends ApiBase {
 			$t_Params = [
 				'title' => $title->getPrefixedDBkey(),
 				'text' => $wikitext,
+				'revid' => $sourceRevisionId,
 				'user' => $user_name,
 				'summary' => $summary,
 				'target' => $params['to'],
