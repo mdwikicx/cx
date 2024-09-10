@@ -24,8 +24,6 @@ function add_sw_categories(html) {
 		categories.push(one("Magonjwa"));
 	}
 
-	console.log(JSON.stringify(categories));
-
 	return categories;
 }
 async function postUrlParamsResult(endPoint, params = {}) {
@@ -319,7 +317,6 @@ async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMappe
 		let categories = add_sw_categories(result.segmentedContent);
 		result.categories = categories;
 	}
-	console.log("add_sw_categories. targetLanguage:", targetLanguage);
 	return result;
 
 };
