@@ -101,6 +101,23 @@ async function getMedwikiHtml(title) {
 	}
 	return html;
 }
+/**
+     * Extracts the revision number from a given HTML text.
+     *
+     * This function searches for a specific pattern in the provided HTML text
+     * that indicates a redirect to a revision. If the pattern is found, it
+     * returns the revision number; otherwise, it returns an empty string.
+     *
+     * @param {string} HTMLText - The HTML text to search for the revision number.
+     * @returns {string} The extracted revision number if found, otherwise an empty string.
+     *
+     * @example
+     * const html = '<a href="Redirect/revision/12345">Link</a>';
+     * const revision = getRevision_old(html);
+     * console.log(revision); // Outputs: '12345'
+     *
+     * @throws {TypeError} Throws an error if the input is not a string.
+     */
 function getRevision_old(HTMLText) {
 	if (HTMLText !== '') {
 		const matches = HTMLText.match(/Redirect\/revision\/(\d+)/);
@@ -111,6 +128,22 @@ function getRevision_old(HTMLText) {
 	}
 	return "";
 }
+/**
+     * Parses the provided HTML text to extract a specific revision ID from span elements
+     * that contain a data attribute with the key "data-mw". If the revision ID is found,
+     * the corresponding span element is removed from the DOM, and the modified HTML is returned.
+     *
+     * @param {string} HTMLText - The HTML text to be parsed.
+     * @returns {{ rev: string, html: string }} An object containing the extracted revision ID
+     * and the modified HTML text. If no revision ID is found, an empty string is returned for rev.
+     *
+     * @example
+     * const result = getRevision_new2('<span data-mw="{&quot;wt&quot;:&quot;mdwiki revid&quot;,&quot;parts&quot;:[{&quot;template&quot;:{&quot;params&quot;:[null,{&quot;wt&quot;:&quot;12345&quot;}]}}]}"></span>');
+     * console.log(result.rev); // Outputs: "12345"
+     * console.log(result.html); // Outputs: modified HTML without the span
+     *
+     * @throws {SyntaxError} Throws an error if the data-mw attribute's JSON is malformed.
+     */
 function getRevision_new2(HTMLText) {
 	// إنشاء وثيقة DOM من النص HTML
 	const parser = new DOMParser();
@@ -135,6 +168,25 @@ function getRevision_new2(HTMLText) {
 	return { rev: "", html: HTMLText };
 }
 
+/**
+     * Extracts the revision number from the provided HTML text and removes the corresponding <span> element.
+     *
+     * This function searches for a specific <span> element that contains a data attribute indicating the 
+     * revision ID in the format of "mdwiki revid". If found, it extracts the revision number and returns 
+     * it along with the updated HTML text without the matched <span> element.
+     *
+     * @param {string} HTMLText - The HTML text to search for the revision number.
+     * @returns {{ rev: string, html: string }} An object containing:
+     *   - rev: The extracted revision number, or an empty string if not found.
+     *   - html: The updated HTML text with the matched <span> element removed.
+     *
+     * @example
+     * const result = getRevision_new("<span data-mw='...' target='{\"wt\":\"mdwiki revid\"}' ...>12345</span>");
+     * console.log(result.rev); // Outputs: "12345"
+     * console.log(result.html); // Outputs: Updated HTML without the <span>
+     *
+     * @throws {Error} Throws an error if the HTMLText is not a valid string.
+     */
 function getRevision_new(HTMLText) {
 	if (HTMLText !== '') {
 		// مطابقة span الذي يحتوي على "mdwiki revid" فقط
@@ -153,6 +205,23 @@ function getRevision_new(HTMLText) {
 }
 
 
+/**
+     * Removes all <span> elements from the provided HTML string that contain the text 'unlinkedwikibase'.
+     *
+     * This function parses the input HTML, identifies <span> elements, and checks if their outer HTML
+     * contains the specified text. If found, the element is removed from the DOM and the original HTML
+     * string is updated accordingly.
+     *
+     * @param {string} html - The HTML string from which <span> elements should be removed.
+     * @returns {string} The modified HTML string with specified <span> elements removed.
+     *
+     * @example
+     * const inputHtml = '<div><span>unlinkedwikibase</span><span>linked</span></div>';
+     * const result = removeUnlinkedWikibase(inputHtml);
+     * // result will be '<div><span>linked</span></div>'
+     *
+     * @throws {Error} Throws an error if the input is not a valid HTML string.
+     */
 function removeUnlinkedWikibase(html) {
 	// إنشاء كائن DOMDocument وتحميل HTML فيه
 	const parser = new DOMParser();
@@ -180,6 +249,33 @@ function removeUnlinkedWikibase(html) {
 	return html;
 }
 
+/**
+     * Asynchronously retrieves and processes content from a specified title in the Mdwiki format.
+     *
+     * This function fetches the HTML content associated with the provided title, processes it to extract
+     * relevant information, and returns an object containing the source language, title, revision, 
+     * segmented content, and categories. If the content cannot be found or processed, it returns false.
+     *
+     * @param {string} title - The title of the content to retrieve from Mdwiki.
+     * @returns {Promise<Object|boolean>} A promise that resolves to an object containing the following properties:
+     *   - sourceLanguage {string} - The source language of the content (always "mdwiki").
+     *   - title {string} - The title of the content.
+     *   - revision {string} - The revision identifier of the content.
+     *   - segmentedContent {string} - The processed segmented content.
+     *   - categories {Array} - An array of categories associated with the content.
+     *   Returns false if the content is not found or if processing fails.
+     *
+     * @throws {Error} Throws an error if there is an issue with fetching or processing the HTML content.
+     *
+     * @example
+     * get_new('Example_Title').then(result => {
+     *   if (result) {
+     *     console.log(result);
+     *   } else {
+     *     console.log('Content not found or processing failed.');
+     *   }
+     * });
+     */
 async function get_new(title) {
 
 	const out = {
