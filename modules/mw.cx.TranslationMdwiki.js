@@ -71,6 +71,27 @@ async function from_simple(targetLanguage, title) {
 	return simple_result;
 }
 
+/**
+     * Asynchronously retrieves HTML content from Medwiki for a specified title.
+     *
+     * This function constructs a URL based on the provided title, encodes it for safe transmission,
+     * and makes a GET request to the Medwiki API to fetch the corresponding HTML content.
+     *
+     * @param {string} title - The title of the Medwiki page to retrieve. 
+     *                         It will be prefixed with "Md:" and spaces will be replaced with underscores.
+     * 
+     * @returns {Promise<string|null>} A promise that resolves to the HTML content of the page, 
+     *                                  or null if the request fails or no HTML is returned.
+     * 
+     * @throws {Error} Throws an error if the fetch operation fails.
+     *
+     * @example
+     * getMedwikiHtml('Example Title').then(html => {
+     *   console.log(html);
+     * }).catch(error => {
+     *   console.error('Error fetching HTML:', error);
+     * });
+     */
 async function getMedwikiHtml(title) {
 	title = "Md:" + title.replace(/\s/g, "_");
 
@@ -114,6 +135,25 @@ function getRevision_old(HTMLText) {
 	}
 	return "";
 }
+/**
+     * Parses the provided HTML text to extract a revision identifier from specific span elements.
+     *
+     * This function utilizes the DOMParser to convert the HTML string into a document object,
+     * searches for span elements with a specific data attribute, and attempts to extract a revision
+     * ID from the JSON contained within that attribute. If successful, it removes the span element
+     * from the document and returns the revision ID along with the modified HTML. In case of a JSON
+     * parsing error, it logs the error and returns an empty revision ID.
+     *
+     * @param {string} HTMLText - The HTML text to be parsed.
+     * @returns {{ rev: string, html: string }} - An object containing the extracted revision ID and the modified HTML.
+     * 
+     * @example
+     * const result = getRevision_new2('<span data-mw="{&quot;wt&quot;:&quot;mdwiki revid&quot;,&quot;parts&quot;:[{&quot;template&quot;:{&quot;params&quot;:[{&quot;wt&quot;:&quot;12345&quot;}]} }] }"></span>');
+     * console.log(result.rev); // Outputs: "12345"
+     * console.log(result.html); // Outputs: modified HTML without the span
+     *
+     * @throws {Error} Throws an error if JSON parsing fails, which is caught and logged.
+     */
 function getRevision_new2(HTMLText) {
 	const parser = new DOMParser();
 	const doc = parser.parseFromString(HTMLText, 'text/html');
