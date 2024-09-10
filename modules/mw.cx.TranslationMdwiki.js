@@ -85,17 +85,20 @@ async function getMedwikiHtml(title) {
 		method: 'GET',
 		dataType: 'json'
 	};
+	let html;
 	try {
-		const result = await fetch(url, options)
+		html = await fetch(url, options)
 			.then((response) => {
 				if (response.ok) {
 					return response.json();
 				}
 			})
+			.then((data) => {
+				return data.html;
+			})
 			.catch((error) => {
 				console.log(error);
 			})
-		var html = result.html;
 	} catch (error) {
 		console.log(error);
 	}
@@ -112,23 +115,26 @@ function getRevision_old(HTMLText) {
 	return "";
 }
 function getRevision_new2(HTMLText) {
-	// إنشاء وثيقة DOM من النص HTML
 	const parser = new DOMParser();
 	const doc = parser.parseFromString(HTMLText, 'text/html');
 
-	// البحث عن جميع وسوم span
 	const spans = doc.querySelectorAll('span[data-mw]');
 
-	// حلقة عبر الوسوم للعثور على العنصر الذي يحتوي على mdwiki revid
 	for (let span of spans) {
 		const dataMW = span.getAttribute('data-mw');
 
 		if (dataMW && dataMW.includes('"wt":"mdwiki revid"')) {
-			const data = JSON.parse(dataMW); // تحويل النص إلى JSON
-			const revid = data.parts[0].template.params['1'].wt; // استخراج revid
+			let data;
+			try {
+				data = JSON.parse(dataMW);
+			} catch (e) {
+				console.error("JSON parsing error:", e);
+				return { rev: "", html: HTMLText }; // Return empty revision on error
+			}
+			const revid = data.parts[0].template.params['1'].wt;
 			console.log("getRevision_new2 rev", revid);
-			span.remove(); // إزالة وسم span من DOM
-			return { rev: revid, html: doc.body.innerHTML }; // إرجاع revid والنص بعد التعديل
+			span.remove();
+			return { rev: revid, html: doc.body.innerHTML };
 		}
 	}
 

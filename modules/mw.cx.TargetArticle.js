@@ -8,12 +8,16 @@
  * @param {ve.init.mw.CXTarget} veTarget
  * @param {Object} config Translation configuration
  * @param {mw.cx.SiteMapper} config.siteMapper SiteMapper instance
+ * @param {string} config.campaign Campaign name for targeting purposes
  */
 mw.cx.TargetArticle = function MWCXTargetArticle( translation, veTarget, config ) {
 	this.translation = translation;
 	this.veTarget = veTarget;
 	this.config = config;
 	this.siteMapper = config.siteMapper;
+	this.campaign = config.campaign;
+
+	console.log('MWCXTargetArticle: campaign: ' + this.campaign);
 	this.sourceTitle = translation.getSourceTitle();
 	this.sourceLanguage = translation.getSourceLanguage();
 	this.targetLanguage = translation.getTargetLanguage();
@@ -146,6 +150,7 @@ mw.cx.TargetArticle.prototype.publish = function ( hasIssues, hasTooMuchUnmodifi
 			title: this.getTargetTitle(),
 			// user: mw.user.getName(),
 			html,
+			campaign: this.campaign,
 			categories: this.getTargetCategories( hasTooMuchUnmodifiedText ),
 			publishtags: this.getTags( hasTooMuchUnmodifiedText ),
 			wpCaptchaId: this.captcha && this.captcha.id,
@@ -226,7 +231,7 @@ mw.cx.TargetArticle.prototype.publishSuccess = function ( response, jqXHR ) {
 				lang: this.targetLanguage,
 				sourcetitle: this.sourceTitle,
 				title: this.getTargetTitle(),
-				// campaign: campaign
+				campaign: this.campaign
 			};
 			var url = "https://mdwiki.toolforge.org/Translation_Dashboard/publish/index.php";
 			window.open( url + '?' + $.param( pp ), '_blank' );
