@@ -1,4 +1,34 @@
 
+function add_sw_categories(html) {
+	function one(cat) {
+		console.log("add_sw_categories:", cat);
+		return {
+			"adapted": true,
+			"sourceTitle": "Category:" + cat,
+			"targetTitle": "Jamii:" + cat
+		}
+	}
+
+	let categories = [];
+	const regexInfoboxDrug = /infobox drug/i;
+	const regexInfoboxMedicalCondition = /infobox medical condition/i;
+
+	// if html has "infobox drug" categories.push( one("Madawa") );
+	// if html has "infobox medical condition" categories.push( one("Magonjwa") );
+
+	if (regexInfoboxDrug.test(html)) {
+		categories.push(one("Madawa"));
+	}
+
+	if (regexInfoboxMedicalCondition.test(html)) {
+		categories.push(one("Magonjwa"));
+	}
+
+	console.log(JSON.stringify(categories));
+	console.log("add_sw_categories. Done");
+
+	return categories;
+}
 async function postUrlParamsResult(endPoint, params = {}) {
 
 	const options = {
@@ -250,7 +280,7 @@ async function get_html_from_mdwiki(targetLanguage, title, fetchPageUrl) {
 	return result;
 };
 
-async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMapper) {
+async function fetchSourcePageContent_mdwiki_new(wikiPage, targetLanguage, siteMapper) {
 	// Manual normalisation to avoid redirects on spaces but not to break namespaces
 	var title = wikiPage.getTitle().replace(/ /g, '_');
 	title = title.replace('/', '%2F');
@@ -276,11 +306,24 @@ async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMappe
 		}
 	};
 
-	const result = await get_html_from_mdwiki(targetLanguage, title, fetchPageUrl);
+	let result = await get_html_from_mdwiki(targetLanguage, title, fetchPageUrl);
 
 	return result;
 
 };
+
+async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMapper) {
+
+	let result = await fetchSourcePageContent_mdwiki_new(wikiPage, targetLanguage, siteMapper);
+
+	if (result && result.html && targetLanguage == "sw") {
+		let categories = add_sw_categories(result.html);
+		result.categories = categories;
+	}
+	return result;
+
+};
+
 mw.cx.TranslationMdwiki = {
 	fetchSourcePageContent_mdwiki
 }
