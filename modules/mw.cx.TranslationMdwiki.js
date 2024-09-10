@@ -1,6 +1,7 @@
 
 function add_sw_categories(html) {
 	function one(cat) {
+		console.log("add_sw_categories:", cat);
 		return {
 			"adapted": true,
 			"sourceTitle": "Category:" + cat,
