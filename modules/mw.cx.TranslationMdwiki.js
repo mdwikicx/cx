@@ -1,5 +1,38 @@
 
+/**
+     * Analyzes the provided HTML content and extracts software categories based on specific infobox patterns.
+     *
+     * This function checks for the presence of "infobox drug" and "infobox medical condition" in the HTML string.
+     * If found, it adds corresponding categories to the result.
+     *
+     * @param {string} html - The HTML content to be analyzed for categories.
+     * @returns {Array<Object>} An array of category objects, each containing the adapted status and titles.
+     * 
+     * @example
+     * const result = add_sw_categories('<div class="infobox drug">...</div>');
+     * console.log(result);
+     * // Output: [{ adapted: true, sourceTitle: "Category:Madawa", targetTitle: "Jamii:Madawa" }]
+     *
+     * @throws {Error} Throws an error if the input is not a string.
+     */
 function add_sw_categories(html) {
+	/**
+	     * Processes a category string and logs it to the console.
+	     * Returns an object containing adapted status and titles based on the provided category.
+	     *
+	     * @param {string} cat - The category to be processed.
+	     * @returns {Object} An object with the following properties:
+	     *   - adapted {boolean}: Indicates if the category was adapted (always true).
+	     *   - sourceTitle {string}: The source title formatted as "Category:<cat>".
+	     *   - targetTitle {string}: The target title formatted as "Jamii:<cat>".
+	     *
+	     * @example
+	     * const result = one("Books");
+	     * console.log(result);
+	     * // Output:
+	     * // add_sw_categories: Books
+	     * // { adapted: true, sourceTitle: 'Category:Books', targetTitle: 'Jamii:Books' }
+	     */
 	function one(cat) {
 		console.log("add_sw_categories:", cat);
 		return {
@@ -29,6 +62,29 @@ function add_sw_categories(html) {
 
 	return categories;
 }
+/**
+     * Sends a POST request to the specified endpoint with the given parameters.
+     *
+     * This asynchronous function constructs a request with JSON content type and sends it to the provided endpoint.
+     * It handles the response by checking if the request was successful and returns the parsed JSON data.
+     *
+     * @async
+     * @param {string} endPoint - The URL to which the request is sent.
+     * @param {Object} [params={}] - An optional object containing the parameters to be sent in the request body.
+     * @returns {Promise<Object|boolean>} A promise that resolves to the parsed JSON response if successful, or false if the request failed.
+     *
+     * @throws {Error} Throws an error if the fetch operation fails due to network issues.
+     *
+     * @example
+     * postUrlParamsResult('https://api.example.com/data', { key: 'value' })
+     *   .then(result => {
+     *     if (result) {
+     *       console.log('Success:', result);
+     *     } else {
+     *       console.log('Request failed');
+     *     }
+     *   });
+     */
 async function postUrlParamsResult(endPoint, params = {}) {
 
 	const options = {
@@ -280,6 +336,29 @@ async function get_html_from_mdwiki(targetLanguage, title, fetchPageUrl) {
 	return result;
 };
 
+/**
+     * Fetches the content of a specified wiki page in a target language.
+     * This function handles normalization of the page title to avoid issues with spaces and namespaces.
+     * It attempts to retrieve the content from a simplified source if available, 
+     * and falls back to fetching the content from the MedWiki API.
+     *
+     * @async
+     * @param {Object} wikiPage - The wiki page object containing metadata about the page.
+     * @param {string} targetLanguage - The language code for the desired content (e.g., 'en', 'fr').
+     * @param {Object} siteMapper - An object that maps site-specific configurations.
+     * @returns {Promise<string>} A promise that resolves to the HTML content of the wiki page.
+     *
+     * @throws {Error} Throws an error if the fetching process fails or if the page does not exist.
+     *
+     * @example
+     * fetchSourcePageContent_mdwiki_new(wikiPage, 'en', siteMapper)
+     *   .then(content => {
+     *     console.log(content);
+     *   })
+     *   .catch(error => {
+     *     console.error('Error fetching page content:', error);
+     *   });
+     */
 async function fetchSourcePageContent_mdwiki_new(wikiPage, targetLanguage, siteMapper) {
 	// Manual normalisation to avoid redirects on spaces but not to break namespaces
 	var title = wikiPage.getTitle().replace(/ /g, '_');
@@ -312,6 +391,29 @@ async function fetchSourcePageContent_mdwiki_new(wikiPage, targetLanguage, siteM
 
 };
 
+/**
+     * Fetches the content of a specified wiki page and processes it for a target language.
+     *
+     * This asynchronous function retrieves the source page content from a media wiki and, if the target language is 
+     * "sw" (Swahili), it adds specific categories to the result.
+     *
+     * @async
+     * @function fetchSourcePageContent_mdwiki
+     * @param {string} wikiPage - The title of the wiki page to fetch content from.
+     * @param {string} targetLanguage - The language code for the target language (e.g., "sw" for Swahili).
+     * @param {Object} siteMapper - An object that maps site-specific configurations or settings.
+     * @returns {Promise<Object>} A promise that resolves to an object containing the fetched content and any added categories.
+     * @throws {Error} Throws an error if the fetch operation fails or if the response is invalid.
+     *
+     * @example
+     * fetchSourcePageContent_mdwiki('Example_Page', 'sw', siteMapper)
+     *   .then(result => {
+     *     console.log(result);
+     *   })
+     *   .catch(error => {
+     *     console.error('Error fetching page content:', error);
+     *   });
+     */
 async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMapper) {
 
 	let result = await fetchSourcePageContent_mdwiki_new(wikiPage, targetLanguage, siteMapper);
