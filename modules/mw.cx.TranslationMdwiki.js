@@ -101,7 +101,7 @@ async function getMedwikiHtml(title) {
 	}
 	return html;
 }
-function getRevision(HTMLText) {
+function getRevision_old(HTMLText) {
 	if (HTMLText !== '') {
 		const matches = HTMLText.match(/Redirect\/revision\/(\d+)/);
 		if (matches && matches[1]) {
@@ -111,6 +111,48 @@ function getRevision(HTMLText) {
 	}
 	return "";
 }
+function getRevision_new2(HTMLText) {
+	// إنشاء وثيقة DOM من النص HTML
+	const parser = new DOMParser();
+	const doc = parser.parseFromString(HTMLText, 'text/html');
+
+	// البحث عن جميع وسوم span
+	const spans = doc.querySelectorAll('span[data-mw]');
+
+	// حلقة عبر الوسوم للعثور على العنصر الذي يحتوي على mdwiki revid
+	for (let span of spans) {
+		const dataMW = span.getAttribute('data-mw');
+
+		if (dataMW && dataMW.includes('"wt":"mdwiki revid"')) {
+			const data = JSON.parse(dataMW); // تحويل النص إلى JSON
+			const revid = data.parts[0].template.params['1'].wt; // استخراج revid
+			console.log("getRevision_new2 rev", revid);
+			span.remove(); // إزالة وسم span من DOM
+			return { rev: revid, html: doc.body.innerHTML }; // إرجاع revid والنص بعد التعديل
+		}
+	}
+
+	return { rev: "", html: HTMLText };
+}
+
+function getRevision_new(HTMLText) {
+	if (HTMLText !== '') {
+		// مطابقة span الذي يحتوي على "mdwiki revid" فقط
+		const regex = /<span[^>]*data-mw='[^']*"target":\{"wt":"mdwiki revid"[^}]*\},"params":\{"1":\{"wt":"(\d+)"\}[^>]*><\/span>/;
+		const matches = HTMLText.match(regex);
+
+		if (matches && matches[1]) {
+			const revision = matches[1];
+			console.log("getRevision_new rev", revision);
+			// إزالة وسم <span> الذي تم مطابقته
+			const updatedHTML = HTMLText.replace(matches[0], '');
+			return { rev: revision, html: updatedHTML };
+		}
+	}
+	return { rev: "", html: HTMLText };
+}
+
+
 function removeUnlinkedWikibase(html) {
 	// إنشاء كائن DOMDocument وتحميل HTML فيه
 	const parser = new DOMParser();
@@ -156,7 +198,15 @@ async function get_new(title) {
 
 	html = removeUnlinkedWikibase(html);
 
-	out.revision = getRevision(html);
+	let tab = getRevision_new(html);
+	out.revision = tab.rev;
+	html = tab.html;
+	if (out.revision == "") {
+		tab = getRevision_new2(html);
+		out.revision = tab.revision;
+		html = tab.updatedHTML;
+	}
+
 	out.segmentedContent = await doFixIt(html);
 	if (out.segmentedContent == "") {
 		console.log("doFixIt: not found");
