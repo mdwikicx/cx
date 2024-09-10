@@ -25,7 +25,6 @@ function add_sw_categories(html) {
 	}
 
 	console.log(JSON.stringify(categories));
-	console.log("add_sw_categories. Done");
 
 	return categories;
 }
@@ -316,10 +315,11 @@ async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMappe
 
 	let result = await fetchSourcePageContent_mdwiki_new(wikiPage, targetLanguage, siteMapper);
 
-	if (result && result.html && targetLanguage == "sw") {
-		let categories = add_sw_categories(result.html);
+	if (result && result.segmentedContent && targetLanguage === "sw") {
+		let categories = add_sw_categories(result.segmentedContent);
 		result.categories = categories;
 	}
+	console.log("add_sw_categories. targetLanguage:", targetLanguage);
 	return result;
 
 };
