@@ -112,25 +112,21 @@ async function getMedwikiHtml(title) {
 		method: 'GET',
 		dataType: 'json'
 	};
-	let html;
-	try {
-		html = await fetch(url, options)
-			.then((response) => {
-				if (response.ok) {
-					return response.json();
-				}
-			})
-			.then((data) => {
-				return data.html;
-			})
-			.catch((error) => {
-				console.log(error);
-			})
-	} catch (error) {
-		console.log(error);
+	let req = await fetch(url, options)
+		.then((response) => {
+			if (response.ok) {
+				return response.json();
+			}
+		})
+		.catch((error) => {
+			console.log(error);
+		})
+	if (!req || !req.html) {
+		return "";
 	}
-	return html;
+	return req.html
 }
+
 function getRevision_old(HTMLText) {
 	if (HTMLText !== '') {
 		const matches = HTMLText.match(/Redirect\/revision\/(\d+)/);
@@ -237,11 +233,15 @@ async function get_new(title) {
 	if (out.revision == "") {
 		tab = getRevision_new2(html);
 		out.revision = tab.revision;
-		html = tab.updatedHTML;
+		// html = tab.updatedHTML;
 	}
 
+	if (!html || html == "") {
+		console.log("html: not found");
+		return false;
+	};
 	out.segmentedContent = await doFixIt(html);
-	if (out.segmentedContent == "") {
+	if (!out.segmentedContent || out.segmentedContent == "") {
 		console.log("doFixIt: not found");
 		return false;
 	};
@@ -277,7 +277,7 @@ async function get_html_from_mdwiki(targetLanguage, title, fetchPageUrl) {
 	return result;
 };
 
-async function fetchSourcePageContent_mdwiki_new(wikiPage, targetLanguage, siteMapper) {
+async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMapper) {
 	// Manual normalisation to avoid redirects on spaces but not to break namespaces
 	var title = wikiPage.getTitle().replace(/ /g, '_');
 	title = title.replace('/', '%2F');
@@ -299,19 +299,15 @@ async function fetchSourcePageContent_mdwiki_new(wikiPage, targetLanguage, siteM
 		// fetchPageUrl = "https://medwiki.toolforge.org/get_html/oo.php";
 		var resultx = await get_new(title);
 		if (resultx) {
+		if (resultx && resultx.segmentedContent && targetLanguage === "sw") {
+			let categories = add_sw_categories(resultx.segmentedContent);
+			resultx.categories = categories;
+		}
 			return resultx;
 		}
 	};
 
 	let result = await get_html_from_mdwiki(targetLanguage, title, fetchPageUrl);
-
-	return result;
-
-};
-
-async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMapper) {
-
-	let result = await fetchSourcePageContent_mdwiki_new(wikiPage, targetLanguage, siteMapper);
 
 	if (result && result.segmentedContent && targetLanguage === "sw") {
 		let categories = add_sw_categories(result.segmentedContent);
