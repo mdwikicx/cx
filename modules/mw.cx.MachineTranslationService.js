@@ -165,25 +165,7 @@ mw.cx.MachineTranslationService.prototype.fetchCXServerToken = function () {
 	// cxtoken
 
 	if (this.sourceLanguage === "mdwiki") {
-		var params = {
-			user: mw.user.getName(),
-			wiki: this.targetLanguage,
-			ty: "cxtoken",
-		}
-		const options = {
-			method: 'GET',
-			dataType: 'json'
-		}
-
-		var url = "https://mdwiki.toolforge.org/Translation_Dashboard/publish/token.php?" + $.param(params)
-
-		const result = fetch(url, options)
-			.then((response) => response.json())
-			.catch(error => {
-				console.error('Error fetching mdwiki token:', error);
-			});
-
-		return result;
+		return mw.cx.TranslationMdwiki.get_cx_token(mw.user.getName(), this.targetLanguage);
 	}
 
 	return new mw.Api().postWithToken('csrf', {
