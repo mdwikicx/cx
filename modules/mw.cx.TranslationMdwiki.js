@@ -1,4 +1,29 @@
+function get_cx_token(user, targetLanguage) {
+	let from_cookie = mw.cookie.get( 'cx_token');
+	if (from_cookie) {
+		console.log('get_cx_token:from_cookie ', from_cookie);
+		return from_cookie;
+	}
+	var params = {
+		user: user,
+		wiki: targetLanguage,
+		ty: "cxtoken",
+	}
+	const options = {
+		method: 'GET',
+		dataType: 'json'
+	}
 
+	var url = "https://mdwiki.toolforge.org/Translation_Dashboard/publish/token.php?" + $.param(params)
+
+	const result = fetch(url, options)
+		.then((response) => response.json())
+		.catch(error => {
+			console.error('Error fetching mdwiki token:', error);
+		});
+	mw.cookie.set('cx_token', result, { expires: 3600, secure: true });
+	return result;
+}
 function add_sw_categories(html) {
 	function one(cat) {
 		console.log("add_sw_categories:", cat);
@@ -299,10 +324,10 @@ async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMappe
 		// fetchPageUrl = "https://medwiki.toolforge.org/get_html/oo.php";
 		var resultx = await get_new(title);
 		if (resultx) {
-		if (resultx && resultx.segmentedContent && targetLanguage === "sw") {
-			let categories = add_sw_categories(resultx.segmentedContent);
-			resultx.categories = categories;
-		}
+			if (resultx && resultx.segmentedContent && targetLanguage === "sw") {
+				let categories = add_sw_categories(resultx.segmentedContent);
+				resultx.categories = categories;
+			}
 			return resultx;
 		}
 	};
@@ -318,5 +343,6 @@ async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMappe
 };
 
 mw.cx.TranslationMdwiki = {
-	fetchSourcePageContent_mdwiki
+	fetchSourcePageContent_mdwiki,
+	get_cx_token
 }
