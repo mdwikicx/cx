@@ -165,7 +165,7 @@ mw.cx.MachineTranslationService.prototype.fetchCXServerToken = function () {
 	// cxtoken
 
 	if (this.sourceLanguage === "mdwiki") {
-		return mw.cx.TranslationMdwiki.get_cx_token(mw.user.getName(), this.targetLanguage);
+		return mw.cx.cx_tokens_Mdwiki.get_cx_token(mw.user.getName(), this.targetLanguage);
 	}
 
 	return new mw.Api().postWithToken('csrf', {

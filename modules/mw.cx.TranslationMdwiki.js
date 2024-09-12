@@ -1,29 +1,4 @@
-function get_cx_token(user, targetLanguage) {
-	let from_cookie = mw.cookie.get( 'cx_token');
-	if (from_cookie) {
-		console.log('get_cx_token:from_cookie ', from_cookie);
-		return from_cookie;
-	}
-	var params = {
-		user: user,
-		wiki: targetLanguage,
-		ty: "cxtoken",
-	}
-	const options = {
-		method: 'GET',
-		dataType: 'json'
-	}
 
-	var url = "https://mdwiki.toolforge.org/Translation_Dashboard/publish/token.php?" + $.param(params)
-
-	const result = fetch(url, options)
-		.then((response) => response.json())
-		.catch(error => {
-			console.error('Error fetching mdwiki token:', error);
-		});
-	mw.cookie.set('cx_token', result, { expires: 3600, secure: true });
-	return result;
-}
 function add_sw_categories(html) {
 	function one(cat) {
 		console.log("add_sw_categories:", cat);
@@ -72,6 +47,11 @@ async function postUrlParamsResult(endPoint, params = {}) {
 		})
 
 	return output;
+}
+
+function doFixItnew(text) {
+	let fixed = mw.fix_text.tet(text);
+	return fixed
 }
 
 async function doFixIt(text) {
@@ -266,6 +246,7 @@ async function get_new(title) {
 		return false;
 	};
 	out.segmentedContent = await doFixIt(html);
+	// out.segmentedContent = doFixItnew(html);
 	if (!out.segmentedContent || out.segmentedContent == "") {
 		console.log("doFixIt: not found");
 		return false;
@@ -343,6 +324,5 @@ async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMappe
 };
 
 mw.cx.TranslationMdwiki = {
-	fetchSourcePageContent_mdwiki,
-	get_cx_token
+	fetchSourcePageContent_mdwiki
 }
