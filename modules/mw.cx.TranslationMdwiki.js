@@ -206,11 +206,11 @@ async function get_new(title) {
 
 	let tab = getRevision_new(html);
 	out.revision = tab.rev;
-	html = tab.html;
+	// html = tab.html;
 	if (out.revision == "") {
 		tab = getRevision_new2(html);
 		out.revision = tab.revision;
-		html = tab.updatedHTML;
+		// html = tab.updatedHTML;
 	}
 
 	out.segmentedContent = await doFixIt(html);
