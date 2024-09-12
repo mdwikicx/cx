@@ -114,51 +114,6 @@ function getRevision_old(HTMLText) {
 	}
 	return "";
 }
-function getRevision_new2(HTMLText) {
-	const parser = new DOMParser();
-	const doc = parser.parseFromString(HTMLText, 'text/html');
-
-	const spans = doc.querySelectorAll('span[data-mw]');
-
-	for (let span of spans) {
-		const dataMW = span.getAttribute('data-mw');
-
-		if (dataMW && dataMW.includes('"wt":"mdwiki revid"')) {
-			let data;
-			try {
-				data = JSON.parse(dataMW);
-			} catch (e) {
-				console.error("JSON parsing error:", e);
-				return { rev: "", html: HTMLText }; // Return empty revision on error
-			}
-			const revid = data.parts[0].template.params['1'].wt;
-			console.log("getRevision_new2 rev", revid);
-			span.remove();
-			return { rev: revid, html: doc.body.innerHTML };
-		}
-	}
-
-	return { rev: "", html: HTMLText };
-}
-
-function getRevision_new(HTMLText) {
-	if (HTMLText !== '') {
-		// مطابقة span الذي يحتوي على "mdwiki revid" فقط
-		const regex = /<span[^>]*data-mw='[^']*"target":\{"wt":"mdwiki revid"[^}]*\},"params":\{"1":\{"wt":"(\d+)"\}[^>]*><\/span>/;
-		const matches = HTMLText.match(regex);
-
-		if (matches && matches[1]) {
-			const revision = matches[1];
-			console.log("getRevision_new rev", revision);
-			// إزالة وسم <span> الذي تم مطابقته
-			const updatedHTML = HTMLText.replace(matches[0], '');
-			return { rev: revision, html: updatedHTML };
-		}
-	}
-	return { rev: "", html: HTMLText };
-}
-
-
 function removeUnlinkedWikibase(html) {
 	// إنشاء كائن DOMDocument وتحميل HTML فيه
 	const parser = new DOMParser();
@@ -204,14 +159,7 @@ async function get_new(title) {
 
 	html = removeUnlinkedWikibase(html);
 
-	let tab = getRevision_new(html);
-	out.revision = tab.rev;
-	// html = tab.html;
-	if (out.revision == "") {
-		tab = getRevision_new2(html);
-		out.revision = tab.revision;
-		// html = tab.updatedHTML;
-	}
+	out.revision = getRevision_old(html);
 
 	out.segmentedContent = await doFixIt(html);
 	if (out.segmentedContent == "") {
