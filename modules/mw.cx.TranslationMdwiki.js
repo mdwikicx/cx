@@ -85,21 +85,25 @@ async function getMedwikiHtml(title) {
 		method: 'GET',
 		dataType: 'json'
 	};
-	let req = await fetch(url, options)
-		.then((response) => {
-			if (response.ok) {
-				return response.json();
-			}
-		})
-		.catch((error) => {
-			console.log(error);
-		})
-	if (!req || !req.html) {
-		return "";
+	let html;
+	try {
+		html = await fetch(url, options)
+			.then((response) => {
+				if (response.ok) {
+					return response.json();
+				}
+			})
+			.then((data) => {
+				return data.html;
+			})
+			.catch((error) => {
+				console.log(error);
+			})
+	} catch (error) {
+		console.log(error);
 	}
-	return req.html
+	return html;
 }
-
 function getRevision_old(HTMLText) {
 	if (HTMLText !== '') {
 		const matches = HTMLText.match(/Redirect\/revision\/(\d+)/);
@@ -198,27 +202,19 @@ async function get_new(title) {
 		return false;
 	};
 
-	out.revision = getRevision_old(html);
 	html = removeUnlinkedWikibase(html);
 
 	let tab = getRevision_new(html);
-	if (tab.rev != "") {
-		out.revision = tab.rev;
-		// if (tab.html != "") { out.segmentedContent = tab.html; }
-	} else {
+	out.revision = tab.rev;
+	// html = tab.html;
+	if (out.revision == "") {
 		tab = getRevision_new2(html);
-		if (tab.rev != "") {
-			out.revision = tab.rev;
-		}
+		out.revision = tab.revision;
+		// html = tab.updatedHTML;
 	}
 
-	if (!html || html == "") {
-		console.log("html: not found");
-		return false;
-	};
 	out.segmentedContent = await doFixIt(html);
-	// out.segmentedContent = doFixItnew(html);
-	if (!out.segmentedContent || out.segmentedContent == "") {
+	if (out.segmentedContent == "") {
 		console.log("doFixIt: not found");
 		return false;
 	};

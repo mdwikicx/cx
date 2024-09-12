@@ -233,7 +233,7 @@ mw.cx.TargetArticle.prototype.publishSuccess = function ( response, jqXHR ) {
 				title: this.getTargetTitle(),
 				campaign: this.campaign
 			};
-			var url = "https://mdwiki.toolforge.org/publish_o/index.php";
+			var url = "https://mdwiki.toolforge.org/Translation_Dashboard/publish/index.php";
 			window.open( url + '?' + $.param( pp ), '_blank' );
 		}
 		this.translation.setTargetURL( targeturl );
