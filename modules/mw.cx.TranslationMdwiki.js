@@ -101,6 +101,27 @@ async function from_simple(targetLanguage, title) {
 	return simple_result;
 }
 
+/**
+     * Asynchronously retrieves HTML content from the Medwiki API for a specified title.
+     *
+     * This function constructs a URL based on the provided title, encodes it for safe transmission,
+     * and makes a GET request to the Medwiki API. It returns the HTML content of the page if available,
+     * or an empty string if the request fails or the HTML content is not present in the response.
+     *
+     * @param {string} title - The title of the Medwiki page to retrieve. 
+     *                         The title will be prefixed with "Md:" and spaces will be replaced with underscores.
+     * @returns {Promise<string>} A promise that resolves to the HTML content of the requested page, 
+     *                            or an empty string if the content is not available.
+     *
+     * @throws {Error} Throws an error if the fetch operation fails.
+     *
+     * @example
+     * getMedwikiHtml('Example Title').then(html => {
+     *   console.log(html);
+     * }).catch(error => {
+     *   console.error('Error fetching Medwiki HTML:', error);
+     * });
+     */
 async function getMedwikiHtml(title) {
 	title = "Md:" + title.replace(/\s/g, "_");
 
@@ -130,6 +151,25 @@ async function getMedwikiHtml(title) {
 	return req.html
 }
 
+/**
+     * Extracts the revision number from a given HTML text.
+     *
+     * This function searches for a specific pattern in the provided HTML text
+     * that indicates a redirect to a revision. If a valid revision number is found,
+     * it is returned as a string. If no revision number is found or if the input
+     * is an empty string, an empty string is returned.
+     *
+     * @param {string} HTMLText - The HTML text to search for the revision number.
+     * @returns {string} The extracted revision number, or an empty string if not found.
+     *
+     * @example
+     * const revision = getRevision_old('<a href="Redirect/revision/12345">');
+     * console.log(revision); // Outputs: "12345"
+     *
+     * @example
+     * const revision = getRevision_old('');
+     * console.log(revision); // Outputs: ""
+     */
 function getRevision_old(HTMLText) {
 	if (HTMLText !== '') {
 		const matches = HTMLText.match(/Redirect\/revision\/(\d+)/);
@@ -212,6 +252,33 @@ function removeUnlinkedWikibase(html) {
 	return html;
 }
 
+/**
+     * Asynchronously retrieves and processes content from a specified title in the Mdwiki format.
+     *
+     * This function fetches HTML content related to the provided title, extracts relevant revisions,
+     * and formats the content for further use. It returns an object containing the source language,
+     * title, revision, segmented content, and categories.
+     *
+     * @param {string} title - The title of the Mdwiki page to retrieve content from.
+     * @returns {Promise<Object|boolean>} A promise that resolves to an object containing the following properties:
+     *   - sourceLanguage: {string} The source language of the content (always "mdwiki").
+     *   - title: {string} The title of the Mdwiki page.
+     *   - revision: {string} The revision identifier of the content.
+     *   - segmentedContent: {string} The processed HTML content.
+     *   - categories: {Array} An array of categories associated with the content.
+     *   Returns false if the content could not be retrieved or processed.
+     *
+     * @throws {Error} Throws an error if there is an issue with fetching or processing the HTML content.
+     *
+     * @example
+     * get_new('Example_Title').then(result => {
+     *   if (result) {
+     *     console.log(result);
+     *   } else {
+     *     console.log('Content not found or processing failed.');
+     *   }
+     * });
+     */
 async function get_new(title) {
 
 	const out = {
