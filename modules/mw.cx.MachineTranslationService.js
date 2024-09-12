@@ -175,7 +175,9 @@ mw.cx.MachineTranslationService.prototype.fetchCXServerToken = function () {
 			dataType: 'json'
 		}
 
-		var url = "https://mdwiki.toolforge.org/Translation_Dashboard/publish/token.php?" + $.param(params)
+		// var endpoint = "https://mdwiki.toolforge.org/Translation_Dashboard/publish/token.php"
+		var endpoint = "https://mdwiki.toolforge.org/publish/token.php"
+		var url = endpoint + "?" + $.param(params)
 
 		const result = fetch(url, options)
 			.then((response) => response.json())
