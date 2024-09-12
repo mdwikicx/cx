@@ -134,6 +134,7 @@ class ApiContentTranslationPublish extends ApiBase {
 		if ( $params['from'] === "mdwiki") {#$mdwiki_result
 			$t_Params = [
 				'title' => $title->getPrefixedDBkey(),
+				'revid' => $sourceRevisionId,
 				'text' => $wikitext,
 				'user' => $user_name,
 				'summary' => $summary,
