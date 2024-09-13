@@ -43,7 +43,8 @@ use Wikimedia\ParamValidator\TypeDef\IntegerDef;
 
 function post_to_target($params)
 {
-	$url = 'https://mdwiki.toolforge.org/Translation_Dashboard/publish/main.php';
+	// $url = 'https://mdwiki.toolforge.org/Translation_Dashboard/publish/main.php';
+	$url = 'https://mdwiki.toolforge.org/publish/main.php';
 	$ch = curl_init();
 
 	$usr_agent = "WikiProjectMed Translation Dashboard/1.0 (https://mdwiki.toolforge.org/; tools.mdwiki@toolforge.org)";

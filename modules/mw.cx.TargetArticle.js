@@ -216,6 +216,7 @@ mw.cx.TargetArticle.prototype.publishSuccess = function ( response, jqXHR ) {
 	const publishResult = response[ publishAction ];
 	console.log( "publishResult:" );
 	console.log( JSON.stringify( publishResult ) );
+	// {"result":"error","edit":{"error":"noaccess","username":"Mr. Ibrahem"}}
 	if ( publishResult.result === 'success' ) {
 		var targeturl = publishResult.targeturl;
 		if (this.sourceLanguage === "mdwiki" && publishResult.published_to != "local") {
@@ -233,7 +234,7 @@ mw.cx.TargetArticle.prototype.publishSuccess = function ( response, jqXHR ) {
 				title: this.getTargetTitle(),
 				campaign: this.campaign
 			};
-			var url = "https://mdwiki.toolforge.org/Translation_Dashboard/publish/index.php";
+			var url = "https://mdwiki.toolforge.org/publish_o/index.php";
 			window.open( url + '?' + $.param( pp ), '_blank' );
 		}
 		this.translation.setTargetURL( targeturl );
@@ -292,6 +293,18 @@ mw.cx.TargetArticle.prototype.publishFail = function ( errorCode, messageOrFailO
 		this.getTargetTitle(),
 		data
 	);
+	let mddx = "OAuth session expired, Please Log again to Translation Dashboard";
+	// cx-message-widget-message
+	let mddxlink = "OAuth session expired, Please Log again to <a href='https://mdwiki.toolforge.org/Translation_Dashboard/auth.php?a=login' target='_blank'>Translation Dashboard</a>";
+	// {"result":"error","edit":{"error":"noaccess","username":"Mr. Ibrahem"}}
+	if ( data.edit.error ) {
+		if ( data.edit.error === 'noaccess' || ( data.edit.error && data.edit.error.code === 'noaccess') ) {
+			this.showPublishError(mddx,"no access_keys in Translation_Dashboard");
+			$('.cx-message-widget-message').html(mddxlink)
+			// $('.cx-message-widget-details').html("<a href='https://mdwiki.toolforge.org/Translation_Dashboard/auth.php?a=login' target='_blank'>Translation Dashboard</a>")
+			return;
+		}
+	}
 
 	const editError = data.error;
 	if ( editError ) {
