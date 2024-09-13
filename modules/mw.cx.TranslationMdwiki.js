@@ -115,21 +115,25 @@ async function getMedwikiHtml(title) {
 		method: 'GET',
 		dataType: 'json'
 	};
-	let req = await fetch(url, options)
-		.then((response) => {
-			if (response.ok) {
-				return response.json();
-			}
-		})
-		.catch((error) => {
-			console.log(error);
-		})
-	if (!req || !req.html) {
-		return "";
+	let html;
+	try {
+		html = await fetch(url, options)
+			.then((response) => {
+				if (response.ok) {
+					return response.json();
+				}
+			})
+			.then((data) => {
+				return data.html;
+			})
+			.catch((error) => {
+				console.log(error);
+			})
+	} catch (error) {
+		console.log(error);
 	}
-	return req.html
+	return html;
 }
-
 function getRevision_old(HTMLText) {
 	if (HTMLText !== '') {
 		const matches = HTMLText.match(/Redirect\/revision\/(\d+)/);
@@ -140,51 +144,6 @@ function getRevision_old(HTMLText) {
 	}
 	return "";
 }
-function getRevision_new2(HTMLText) {
-	const parser = new DOMParser();
-	const doc = parser.parseFromString(HTMLText, 'text/html');
-
-	const spans = doc.querySelectorAll('span[data-mw]');
-
-	for (let span of spans) {
-		const dataMW = span.getAttribute('data-mw');
-
-		if (dataMW && dataMW.includes('"wt":"mdwiki revid"')) {
-			let data;
-			try {
-				data = JSON.parse(dataMW);
-			} catch (e) {
-				console.error("JSON parsing error:", e);
-				return { rev: "", html: HTMLText }; // Return empty revision on error
-			}
-			const revid = data.parts[0].template.params['1'].wt;
-			console.log("getRevision_new2 rev", revid);
-			span.remove();
-			return { rev: revid, html: doc.body.innerHTML };
-		}
-	}
-
-	return { rev: "", html: HTMLText };
-}
-
-function getRevision_new(HTMLText) {
-	if (HTMLText !== '') {
-		// مطابقة span الذي يحتوي على "mdwiki revid" فقط
-		const regex = /<span[^>]*data-mw='[^']*"target":\{"wt":"mdwiki revid"[^}]*\},"params":\{"1":\{"wt":"(\d+)"\}[^>]*><\/span>/;
-		const matches = HTMLText.match(regex);
-
-		if (matches && matches[1]) {
-			const revision = matches[1];
-			console.log("getRevision_new rev", revision);
-			// إزالة وسم <span> الذي تم مطابقته
-			const updatedHTML = HTMLText.replace(matches[0], '');
-			return { rev: revision, html: updatedHTML };
-		}
-	}
-	return { rev: "", html: HTMLText };
-}
-
-
 function removeUnlinkedWikibase(html) {
 	// إنشاء كائن DOMDocument وتحميل HTML فيه
 	const parser = new DOMParser();
@@ -228,27 +187,12 @@ async function get_new(title) {
 		return false;
 	};
 
-	out.revision = getRevision_old(html);
 	html = removeUnlinkedWikibase(html);
 
-	let tab = getRevision_new(html);
-	if (tab.rev != "") {
-		out.revision = tab.rev;
-		// if (tab.html != "") { out.segmentedContent = tab.html; }
-	} else {
-		tab = getRevision_new2(html);
-		if (tab.rev != "") {
-			out.revision = tab.rev;
-		}
-	}
+	out.revision = getRevision_old(html);
 
-	if (!html || html == "") {
-		console.log("html: not found");
-		return false;
-	};
 	out.segmentedContent = await doFixIt(html);
-	// out.segmentedContent = doFixItnew(html);
-	if (!out.segmentedContent || out.segmentedContent == "") {
+	if (out.segmentedContent == "") {
 		console.log("doFixIt: not found");
 		return false;
 	};
