@@ -8,12 +8,16 @@
  * @param {ve.init.mw.CXTarget} veTarget
  * @param {Object} config Translation configuration
  * @param {mw.cx.SiteMapper} config.siteMapper SiteMapper instance
+ * @param {string} config.campaign Campaign name for targeting purposes
  */
 mw.cx.TargetArticle = function MWCXTargetArticle( translation, veTarget, config ) {
 	this.translation = translation;
 	this.veTarget = veTarget;
 	this.config = config;
 	this.siteMapper = config.siteMapper;
+	this.campaign = config.campaign;
+
+	console.log('MWCXTargetArticle: campaign: ' + this.campaign);
 	this.sourceTitle = translation.getSourceTitle();
 	this.sourceLanguage = translation.getSourceLanguage();
 	this.targetLanguage = translation.getTargetLanguage();
@@ -144,7 +148,9 @@ mw.cx.TargetArticle.prototype.publish = function ( hasIssues, hasTooMuchUnmodifi
 			to: this.targetLanguage,
 			sourcetitle: this.sourceTitle,
 			title: this.getTargetTitle(),
+			// user: mw.user.getName(),
 			html,
+			campaign: this.campaign,
 			categories: this.getTargetCategories( hasTooMuchUnmodifiedText ),
 			publishtags: this.getTags( hasTooMuchUnmodifiedText ),
 			wpCaptchaId: this.captcha && this.captcha.id,
@@ -208,9 +214,30 @@ mw.cx.TargetArticle.prototype.publishSection = function () {
 mw.cx.TargetArticle.prototype.publishSuccess = function ( response, jqXHR ) {
 	const publishAction = this.translation.isSectionTranslation() ? 'cxpublishsection' : 'cxpublish';
 	const publishResult = response[ publishAction ];
-
+	console.log( "publishResult:" );
+	console.log( JSON.stringify( publishResult ) );
+	// {"result":"error","edit":{"error":"noaccess","username":"Mr. Ibrahem"}}
 	if ( publishResult.result === 'success' ) {
-		this.translation.setTargetURL( publishResult.targeturl );
+		var targeturl = publishResult.targeturl;
+		if (this.sourceLanguage === "mdwiki" && publishResult.published_to != "local") {
+			targeturl = publishResult.targeturl_wiki;
+		}
+		if (publishResult.LinkToWikidata) {
+			console.log('LinkToWikidata: ' + JSON.stringify(publishResult.LinkToWikidata));
+		}
+		// TODO:
+		if ( this.sourceLanguage === "mdwiki" && publishResult.published_to == "local" ) {
+			const pp = {
+				user: mw.user.getName(),
+				lang: this.targetLanguage,
+				sourcetitle: this.sourceTitle,
+				title: this.getTargetTitle(),
+				campaign: this.campaign
+			};
+			var url = "https://mdwiki.toolforge.org/publish_o/index.php";
+			window.open( url + '?' + $.param( pp ), '_blank' );
+		}
+		this.translation.setTargetURL( targeturl );
 		return this.publishComplete( publishResult.targettitle || null );
 	}
 
@@ -266,6 +293,18 @@ mw.cx.TargetArticle.prototype.publishFail = function ( errorCode, messageOrFailO
 		this.getTargetTitle(),
 		data
 	);
+	let mddx = "OAuth session expired, Please Log again to Translation Dashboard";
+	// cx-message-widget-message
+	let mddxlink = "OAuth session expired, Please Log again to <a href='https://mdwiki.toolforge.org/Translation_Dashboard/auth.php?a=login' target='_blank'>Translation Dashboard</a>";
+	// {"result":"error","edit":{"error":"noaccess","username":"Mr. Ibrahem"}}
+	if ( data.edit.error ) {
+		if ( data.edit.error === 'noaccess' || ( data.edit.error && data.edit.error.code === 'noaccess') ) {
+			this.showPublishError(mddx,"no access_keys in Translation_Dashboard");
+			$('.cx-message-widget-message').html(mddxlink)
+			// $('.cx-message-widget-details').html("<a href='https://mdwiki.toolforge.org/Translation_Dashboard/auth.php?a=login' target='_blank'>Translation Dashboard</a>")
+			return;
+		}
+	}
 
 	const editError = data.error;
 	if ( editError ) {
