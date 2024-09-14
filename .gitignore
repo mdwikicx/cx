@@ -16,3 +16,5 @@ tests/selenium/log
 **/i18n/api/*.json
 /modules/new_js
 includes/ActionApi/ApiContentTranslationPublish.phpz
+/i18n
+/i18n/minT

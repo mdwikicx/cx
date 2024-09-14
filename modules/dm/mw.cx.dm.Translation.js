@@ -642,6 +642,8 @@ mw.cx.dm.Translation.prototype.getTargetSectionTitle = function () {
  * @return {string} Source language
  */
 mw.cx.dm.Translation.prototype.getSourceLanguage = function () {
+	// if (this.sourceWikiPage.getLanguage() == "mdwiki") return "en";
+
 	return this.sourceWikiPage.getLanguage();
 };
 
