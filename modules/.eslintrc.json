@@ -1,0 +1,21 @@
+{
+	"root": true,
+	"extends": [
+		"wikimedia/client-es6",
+		"wikimedia/jquery",
+		"wikimedia/mediawiki"
+	],
+	"globals": {
+		"ve": "readonly",
+		"moment": "readonly",
+		"Promise": "readonly"
+	},
+	"rules": {
+		"max-len": "off",
+		"no-jquery/no-global-selector": "off",
+		"no-shadow": "warn",
+		"compat/compat": "warn",
+		"vue/no-v-text": "warn",
+		"es-x/no-resizable-and-growable-arraybuffers": "off"
+	}
+}
