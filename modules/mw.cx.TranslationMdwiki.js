@@ -1,5 +1,4 @@
 
-
 async function postUrlParamsResult(endPoint, params = {}) {
 
 	const options = {
