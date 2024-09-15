@@ -1,4 +1,31 @@
 
+function add_sw_categories(html) {
+	function one(cat) {
+		console.log("add_sw_categories:", cat);
+		return {
+			"adapted": true,
+			"sourceTitle": "Category:" + cat,
+			"targetTitle": "Jamii:" + cat
+		}
+	}
+
+	let categories = [];
+	const regexInfoboxDrug = /infobox drug/i;
+	const regexInfoboxMedicalCondition = /infobox medical condition/i;
+
+	// if html has "infobox drug" categories.push( one("Madawa") );
+	// if html has "infobox medical condition" categories.push( one("Magonjwa") );
+
+	if (regexInfoboxDrug.test(html)) {
+		categories.push(one("Madawa"));
+	}
+
+	if (regexInfoboxMedicalCondition.test(html)) {
+		categories.push(one("Magonjwa"));
+	}
+
+	return categories;
+}
 
 async function postUrlParamsResult(endPoint, params = {}) {
 
@@ -86,25 +113,21 @@ async function getMedwikiHtml(title) {
 		method: 'GET',
 		dataType: 'json'
 	};
-	let html;
-	try {
-		html = await fetch(url, options)
-			.then((response) => {
-				if (response.ok) {
-					return response.json();
-				}
-			})
-			.then((data) => {
-				return data.html;
-			})
-			.catch((error) => {
-				console.log(error);
-			})
-	} catch (error) {
-		console.log(error);
+	let req = await fetch(url, options)
+		.then((response) => {
+			if (response.ok) {
+				return response.json();
+			}
+		})
+		.catch((error) => {
+			console.log(error);
+		})
+	if (!req || !req.html) {
+		return "";
 	}
-	return html;
+	return req.html
 }
+
 function getRevision_old(HTMLText) {
 	if (HTMLText !== '') {
 		const matches = HTMLText.match(/Redirect\/revision\/(\d+)/);
@@ -115,6 +138,51 @@ function getRevision_old(HTMLText) {
 	}
 	return "";
 }
+function getRevision_new2(HTMLText) {
+	const parser = new DOMParser();
+	const doc = parser.parseFromString(HTMLText, 'text/html');
+
+	const spans = doc.querySelectorAll('span[data-mw]');
+
+	for (let span of spans) {
+		const dataMW = span.getAttribute('data-mw');
+
+		if (dataMW && dataMW.includes('"wt":"mdwiki revid"')) {
+			let data;
+			try {
+				data = JSON.parse(dataMW);
+			} catch (e) {
+				console.error("JSON parsing error:", e);
+				return { rev: "", html: HTMLText }; // Return empty revision on error
+			}
+			const revid = data.parts[0].template.params['1'].wt;
+			console.log("getRevision_new2 rev", revid);
+			span.remove();
+			return { rev: revid, html: doc.body.innerHTML };
+		}
+	}
+
+	return { rev: "", html: HTMLText };
+}
+
+function getRevision_new(HTMLText) {
+	if (HTMLText !== '') {
+		// مطابقة span الذي يحتوي على "mdwiki revid" فقط
+		const regex = /<span[^>]*data-mw='[^']*"target":\{"wt":"mdwiki revid"[^}]*\},"params":\{"1":\{"wt":"(\d+)"\}[^>]*><\/span>/;
+		const matches = HTMLText.match(regex);
+
+		if (matches && matches[1]) {
+			const revision = matches[1];
+			console.log("getRevision_new rev", revision);
+			// إزالة وسم <span> الذي تم مطابقته
+			const updatedHTML = HTMLText.replace(matches[0], '');
+			return { rev: revision, html: updatedHTML };
+		}
+	}
+	return { rev: "", html: HTMLText };
+}
+
+
 function removeUnlinkedWikibase(html) {
 	// إنشاء كائن DOMDocument وتحميل HTML فيه
 	const parser = new DOMParser();
@@ -161,9 +229,20 @@ async function get_new(title) {
 	html = removeUnlinkedWikibase(html);
 
 	out.revision = getRevision_old(html);
+	let tab = getRevision_new(html);
+	out.revision = tab.rev;
+	html = tab.html;
+	if (out.revision == "") {
+		tab = getRevision_new2(html);
+		out.revision = tab.revision;
+		// html = tab.updatedHTML;
+	}
 
+	if (!html || html == "") {
+		console.log("html: not found");
+		return false;
+	};
 	out.segmentedContent = await doFixIt(html);
-	// if (out.segmentedContent == "") {
 	if (!out.segmentedContent || out.segmentedContent == "") {
 		console.log("doFixIt: not found");
 		return false;
@@ -222,15 +301,24 @@ async function fetchSourcePageContent_mdwiki(wikiPage, targetLanguage, siteMappe
 		// fetchPageUrl = "https://medwiki.toolforge.org/get_html/oo.php";
 		var resultx = await get_new(title);
 		if (resultx) {
+			if (resultx && resultx.segmentedContent && targetLanguage === "sw") {
+				let categories = add_sw_categories(resultx.segmentedContent);
+				resultx.categories = categories;
+			}
 			return resultx;
 		}
 	};
 
-	const result = await get_html_from_mdwiki(targetLanguage, title, fetchPageUrl);
+	let result = await get_html_from_mdwiki(targetLanguage, title, fetchPageUrl);
 
+	if (result && result.segmentedContent && targetLanguage === "sw") {
+		let categories = add_sw_categories(result.segmentedContent);
+		result.categories = categories;
+	}
 	return result;
 
 };
+
 mw.cx.TranslationMdwiki = {
 	fetchSourcePageContent_mdwiki
 }
