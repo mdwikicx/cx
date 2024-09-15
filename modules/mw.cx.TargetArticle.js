@@ -215,7 +215,15 @@ mw.cx.TargetArticle.prototype.publishSuccess = function ( response, jqXHR ) {
 	const publishAction = this.translation.isSectionTranslation() ? 'cxpublishsection' : 'cxpublish';
 	const publishResult = response[ publishAction ];
 	console.log( "publishResult:" );
-	console.log( JSON.stringify( publishResult ) );
+
+	if ( publishResult.save_result_all) {
+		console.log("_____");
+		console.log("local result: " + JSON.stringify( publishResult.save_result_all.result ) );
+		console.log("mdwiki_result: " + JSON.stringify( publishResult.save_result_all.mdwiki_result ) );
+	} else {
+		console.log( JSON.stringify( publishResult ) );
+	}
+
 	// {"result":"error","edit":{"error":"noaccess","username":"Mr. Ibrahem"}}
 	if ( publishResult.result === 'success' ) {
 		var targeturl = publishResult.targeturl;
@@ -241,7 +249,7 @@ mw.cx.TargetArticle.prototype.publishSuccess = function ( response, jqXHR ) {
 		return this.publishComplete( publishResult.targettitle || null );
 	}
 
-	if ( publishResult.edit.captcha ) {
+	if ( publishResult && publishResult.edit && publishResult.edit.captcha ) {
 		// If there is a captcha challenge, get the solution and retry.
 		return this.loadCaptchaDialog().then(
 			this.showErrorCaptcha.bind( this, publishResult.edit.captcha )

@@ -47,20 +47,22 @@ function post_to_target($params)
 	$url = 'https://mdwiki.toolforge.org/publish/main.php';
 	$ch = curl_init();
 
-	// $usr_agent = "WikiProjectMed Translation Dashboard/1.0 (https://mdwiki.toolforge.org/; tools.mdwiki@toolforge.org)";
+	$usr_agent = "WikiProjectMed Translation Dashboard/1.0 (https://mdwiki.toolforge.org/; tools.mdwiki@toolforge.org)";
 
 	curl_setopt($ch, CURLOPT_URL, $url);
 	curl_setopt($ch, CURLOPT_POST, 1);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	// curl_setopt($ch, CURLOPT_USERAGENT, $usr_agent);
+
+	// mdwiki_result: {"response":"Requests must have a user agent"}
+	curl_setopt($ch, CURLOPT_USERAGENT, $usr_agent);
 	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
 	curl_setopt($ch, CURLOPT_TIMEOUT, 15);
 
 	$response = curl_exec($ch);
 
 	curl_close($ch);
-	$js = json_decode($response, true);
+	$js = json_decode($response, true) ?? ["response" => $response];
 	return $js;
 }
 
@@ -97,7 +99,20 @@ class ApiContentTranslationPublish extends ApiBase {
 	protected function getParsoidClient(): ParsoidClient {
 		return $this->parsoidClientFactory->createParsoidClient();
 	}
-
+	protected function publishToMdwiki($title, $wikitext, $params, $sourceRevisionId, $summary, $user_name) {
+		$t_Params = [
+			'title' => $title->getPrefixedDBkey(),
+			'revid' => $sourceRevisionId,
+			'text' => $wikitext,
+			'user' => $user_name,
+			'summary' => $summary,
+			'target' => $params['to'],
+			'campaign' => $params['campaign'],
+			'sourcetitle' => $params['sourcetitle'],
+		];
+		$mdwiki_result = post_to_target($t_Params);
+		return $mdwiki_result;
+	}
 	protected function saveWikitext( $title, $wikitext, $params ) {
 		$categories = $this->getCategories( $params );
 		if ( count( $categories ) ) {
@@ -133,22 +148,12 @@ class ApiContentTranslationPublish extends ApiBase {
 		$mdwiki_result = false;
 
 		if ( $params['from'] === "mdwiki") {#$mdwiki_result
-			$t_Params = [
-				'title' => $title->getPrefixedDBkey(),
-				'revid' => $sourceRevisionId,
-				'text' => $wikitext,
-				'user' => $user_name,
-				'summary' => $summary,
-				'target' => $params['to'],
-				'campaign' => $params['campaign'],
-				'sourcetitle' => $params['sourcetitle'],
-			];
 
-			$mdwiki_result = post_to_target($t_Params);
+			$mdwiki_result = $this->publishToMdwiki($title, $wikitext, $params, $sourceRevisionId, $summary, $user_name);
 			$this->published_to = "mdwiki";
 			// return $Result;
-			$wikitext = "<pre>$wikitext</pre>";
 
+			$wikitext = "<pre>$wikitext</pre>";
 			$wikitext .= "\n{{tr|" . $params['to'] . '|' . $params['sourcetitle'] . '|' . $user_name . '}}';
 		}
 
@@ -158,6 +163,7 @@ class ApiContentTranslationPublish extends ApiBase {
 			'text' => $wikitext,
 			'summary' => $summary,
 		];
+
 		$request = $this->getRequest();
 
 		$api = new ApiMain(
@@ -171,10 +177,12 @@ class ApiContentTranslationPublish extends ApiBase {
 
 		$api->execute();
 		$result = $api->getResult()->getResultData();
-		if ( $params['from'] === "mdwiki") { #  && $mdwiki_result
-			return $mdwiki_result;
-		}
-		return $result;
+		// if ( $params['from'] === "mdwiki") return $mdwiki_result;
+
+		return [
+			'result' => $result,
+			'mdwiki_result' => $mdwiki_result,
+		];
 	}
 
 	protected function getTags( array $params ) {
@@ -305,7 +313,15 @@ class ApiContentTranslationPublish extends ApiBase {
 			);
 		}
 
-		$saveresult = $this->saveWikitext( $targetTitle, $wikitext, $params );
+		$save_result_all = $this->saveWikitext( $targetTitle, $wikitext, $params );
+
+		$saveresult = $save_result_all['result'];
+		$saveresult_mdwiki = $save_result_all['mdwiki_result'];
+
+		if ( $params['from'] === "mdwiki") {
+			$saveresult = $saveresult_mdwiki;
+		};
+
 		$editStatus = $saveresult['edit']['result'];
 
 		if ( $editStatus === 'Success' ) {
@@ -317,8 +333,13 @@ class ApiContentTranslationPublish extends ApiBase {
 					ChangeTags::addTags( $tags, null, $revId, null );
 				} );
 			}
+			$title2 = $targetTitle->getPrefixedDBkey();
 
-			$targetURL = $this->targetUrlCreator->createTargetUrl( $targetTitle->getPrefixedDBkey(), $params['to'] );
+			if ( $params['from'] === "mdwiki") {
+				$title2 = $params['to'] . "/" .$params['sourcetitle'];
+			};
+
+			$targetURL = $this->targetUrlCreator->createTargetUrl( $title2, $params['to'] );
 			$targeturl_wiki = SiteMapper::getPageURL( $params['to'], $targetTitle->getPrefixedDBkey() );
 			$result = [
 				'result' => 'success',
@@ -350,6 +371,8 @@ class ApiContentTranslationPublish extends ApiBase {
 				'edit' => $saveresult['edit']
 			];
 		}
+		$result['save_result_all'] = $save_result_all;
+
 		$this->getResult()->addValue( null, $this->getModuleName(), $result );
 	}
 

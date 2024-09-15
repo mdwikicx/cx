@@ -176,8 +176,9 @@ const fetchSegmentedContent_mdwiki = (
         method: 'GET',
         dataType: 'json'
     }
+    const searchParams = new URLSearchParams(cxServerParams);
 
-    cxServerApiURL = cxServerApiURL + "?" + $.param(cxServerParams)
+    cxServerApiURL = `${cxServerApiURL}?${searchParams.toString()}`;
 
     const result = fetch(cxServerApiURL, options)
         .then((response) => response.json())
